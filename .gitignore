@@ -135,3 +135,4 @@ piano-worklet-processor.js
 
 # t-mod stuff
 .other/
+.vscode/
