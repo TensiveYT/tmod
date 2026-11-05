@@ -1,0 +1,25 @@
+{
+  "name": "mppnet",
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "@types/jquery": "^3.5.0",
+    "esbuild": "^0.17.5",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "typescript": "^5.4.0"
+  },
+  "scripts": {
+    "build": "bun run build:main",
+    "build:main": "bun build src/main.ts --outfile=client/script.js --outdir=client/ --entry-naming=[dir]/script.[ext] --sourcemap=linked --format=iife --target=browser",
+    "build:min": "bun run build:main -- --minify",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "i18nextify": "3.3.1"
+  },
+  "allowScripts": {
+    "esbuild": true
+  }
+}
