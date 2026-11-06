@@ -1,9 +1,9 @@
-import type { NoteQuotaParams } from '../types'
+import type { NoteQuotaParams } from '../../types'
 
-export class NoteQuota {
-	static PARAMS_LOBBY = { allowance: 200, max: 600 }
-	static PARAMS_NORMAL = { allowance: 400, max: 1200 }
-	static PARAMS_RIDICULOUS = { allowance: 600, max: 1800 }
+export class NormalNoteQuota {
+	static PARAMS_LOBBY = { allowance: 200, max: 600, maxHistLen: 3 }
+	static PARAMS_NORMAL = { allowance: 400, max: 1200, maxHistLen: 3 }
+	static PARAMS_RIDICULOUS = { allowance: 600, max: 1800, maxHistLen: 3 }
 	static PARAMS_OFFLINE = { allowance: 8000, max: 24000, maxHistLen: 3 }
 	static PARAMS_UNLIMITED = { allowance: 1000000, max: 3000000, maxHistLen: 3 }
 
@@ -30,10 +30,10 @@ export class NoteQuota {
 	}
 
 	setParams(params?: NoteQuotaParams) {
-		params = params || NoteQuota.PARAMS_OFFLINE
-		const allowance = params.allowance || this.allowance || NoteQuota.PARAMS_OFFLINE.allowance
-		const max = params.max || this.max || NoteQuota.PARAMS_OFFLINE.max
-		const maxHistLen = params.maxHistLen || this.maxHistLen || NoteQuota.PARAMS_OFFLINE.maxHistLen
+		params = params || NormalNoteQuota.PARAMS_OFFLINE
+		const allowance = params.allowance || this.allowance || NormalNoteQuota.PARAMS_OFFLINE.allowance
+		const max = params.max || this.max || NormalNoteQuota.PARAMS_OFFLINE.max
+		const maxHistLen = params.maxHistLen || this.maxHistLen || NormalNoteQuota.PARAMS_OFFLINE.maxHistLen
 		if (allowance !== this.allowance || max !== this.max || maxHistLen !== this.maxHistLen) {
 			this.allowance = allowance
 			this.max = max

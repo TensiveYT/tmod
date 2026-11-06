@@ -1,5 +1,6 @@
 import type { Client } from '../libs/Client'
-import type { NoteQuota } from '../libs/NoteQuota'
+import type { NormalNoteQuota } from '../libs/notequota/NormalNoteQuota'
+import type { DynamicNoteQuota } from '../libs/notequota/DynamicNoteQuota'
 import type { CanvasRenderer } from '../piano/renderer'
 import type { PianoKey } from '../piano/piano'
 import { SoundSelector } from '../libs/SoundSelector'
@@ -46,7 +47,7 @@ export interface Chat {
 export const state = {
 	client: null as Client | null,
 	piano: null as Piano | null,
-	noteQuota: null as NoteQuota | null,
+	noteQuota: null as NormalNoteQuota | DynamicNoteQuota | null,
 	soundSelector: null as SoundSelector | null,
 	chat: null as Chat | null,
 	addons: {
@@ -70,7 +71,7 @@ export function getPiano(): Piano {
 	return state.piano
 }
 
-export function getNoteQuota(): NoteQuota {
+export function getNoteQuota(): NormalNoteQuota | DynamicNoteQuota {
 	if (!state.noteQuota) throw new Error('NoteQuota not initialized')
 	return state.noteQuota
 }

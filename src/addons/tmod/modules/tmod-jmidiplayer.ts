@@ -15,9 +15,10 @@ import { USE_128_KEYS } from '../../../modules/settings/tmod/tmod-piano'
 import { MIDI_KEY_NAMES } from '../../../util/constants'
 
 /* import: misc */
-import { getClient, getPiano, state } from '../../../util/state'
+import { getClient, getNoteQuota, getPiano, state } from '../../../util/state'
 import { openFileDialog } from '../../../util/util'
 import * as logger from './tmod-logger'
+import { USE_INFINITE_NOTEQUOTA } from '../../../modules/settings/tmod/tmod-notes'
 
 /* checks */
 export function getIsPlayerInitialized(): boolean {
@@ -55,28 +56,49 @@ export function initTPlayer(): Player {
 	let hPlayer = new Player()
 	let piano = getPiano()
 	let client = getClient()
-
+	let noteQuota = getNoteQuota()
 	hPlayer.on('midiEvent', e => {
 		switch (e.type) {
 			case 0x08: {
 				// note off
-				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) return
+				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) 
+					return
+
+				if (!USE_INFINITE_NOTEQUOTA)
+						if (!noteQuota.spend(1))
+							return
+				
 				let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 				piano.stop(key, { id: client.participantId }, 0)
-				if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.stopNote(key)
+				if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+					client.stopNote(key)
 				break
 			}
 			case 0x09: {
 				// note on
-				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) return
+				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) 
+					return
+				
 				if (e.velocity === 0) {
+					if (!USE_INFINITE_NOTEQUOTA)
+						if (!noteQuota.spend(1))
+							return
+					
 					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 					piano.stop(key, { id: client.participantId }, 0)
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.stopNote(key)
+
+					if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+						client.stopNote(key)
 				} else {
+					if (!USE_INFINITE_NOTEQUOTA)
+						if (!noteQuota.spend(1))
+							return
+
 					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 					piano.play(key, e.velocity / 127, { id: client.participantId, color: COLOR_PALETTE[e.channel] }, 0)
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.startNote(key, e.velocity / 127)
+
+					if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+						client.startNote(key, e.velocity / 127)
 				}
 				break
 			}

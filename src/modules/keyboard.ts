@@ -1,13 +1,15 @@
 import { getClient, getPiano, state } from '../util/state'
 import { settings } from './settings/settings'
 import { press, release, pressSustain, releaseSustain, setAutoSustain, getAutoSustain } from '../util/actions'
-import { NoteQuota } from '../libs/NoteQuota'
+import { NormalNoteQuota } from '../libs/notequota/NormalNoteQuota'
+import { DynamicNoteQuota } from '../libs/notequota/DynamicNoteQuota'
 import { Notification } from '../libs/Notification'
 import { openModal } from '../util/modal'
 import { fadeIn, fadeOut } from '../util/util'
 import type { Participant } from '../types'
 import { i18next } from '../util/translations'
 import { initBackground } from './background'
+import { USE_DYNAMIC_NOTEQUOTA } from './settings/tmod/tmod-notes'
 
 let gKeyboardSeq = 0
 
@@ -357,22 +359,36 @@ export function initKeyboard(): void {
 	const gNoteQuota = (() => {
 		let last_rat = 0
 		const nqjq = document.querySelector('#quota .value') as HTMLElement
-		setInterval(() => {
-			gNoteQuota.tick()
-		}, 2000)
-		return new NoteQuota((points: number) => {
-			if (state.noteQuota) {
-				const rat = (points / (state.noteQuota as any).max) * 100
-				if (rat <= last_rat) {
-					nqjq.style.transition = 'none'
-					nqjq.style.width = rat.toFixed(0) + '%'
-				} else {
-					nqjq.style.transition = 'width 2s linear'
+		if (!USE_DYNAMIC_NOTEQUOTA)
+			setInterval(() => {
+				gNoteQuota.tick()
+			}, 2000)
+		
+		if (!USE_DYNAMIC_NOTEQUOTA)
+			return new NormalNoteQuota((points: number) => {
+				if (state.noteQuota) {
+					let rat = (points / (state.noteQuota as any).max) * 100
+					if (rat <= last_rat) {
+						nqjq.style.transition = 'none'
+						nqjq.style.width = rat.toFixed(0) + '%'
+					} else {
+						nqjq.style.transition = 'width 2s linear'
+						nqjq.style.width = rat.toFixed(0) + '%'
+					}
+					last_rat = rat
+				}
+			})
+		else {
+			let noteQuota = new DynamicNoteQuota()
+			nqjq.style.transition = 'width 0.05s linear'
+			setInterval(() => {
+				if (noteQuota) {
+					let rat = (noteQuota.points / noteQuota.max) * 100
 					nqjq.style.width = rat.toFixed(0) + '%'
 				}
-				last_rat = rat
-			}
-		})
+			}, 50)
+			return noteQuota
+		}
 	})()
 	state.noteQuota = gNoteQuota
 
@@ -380,7 +396,7 @@ export function initKeyboard(): void {
 		gNoteQuota.setParams(nq_params)
 	})
 	gClient.on('disconnect', () => {
-		gNoteQuota.setParams(NoteQuota.PARAMS_OFFLINE)
+		gNoteQuota.setParams(DynamicNoteQuota.PARAMS_OFFLINE)
 	})
 
 	// DMs
