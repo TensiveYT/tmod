@@ -625,26 +625,31 @@ export function initChat(): Chat {
 				break
 			case 'ArrowUp':
 				if (historyIndex > 0) {
+					if (historyIndex === history.length)
+						msgInProgress = input.value
+
 					historyIndex--
-
-					if (!msgInProgress) msgInProgress = input.value
-
 					input.value = history[historyIndex]
 				}
 
-				if (!settings.noPreventDefault) evt.preventDefault()
+				if (!settings.noPreventDefault) 
+					evt.preventDefault()
 				evt.stopPropagation()
 				break
 			case 'ArrowDown':
-				if (historyIndex === history.length - 1) {
-					input.value = msgInProgress
-				} else {
-					if (historyIndex < history.length - 1) historyIndex++
+				if (historyIndex < history.length) {
+					historyIndex++
 
-					input.value = history[historyIndex]
+					if (historyIndex === history.length) {
+						input.value = msgInProgress ?? ''
+						msgInProgress = undefined
+					} else {
+						input.value = history[historyIndex]
+					}
 				}
 
-				if (!settings.noPreventDefault) evt.preventDefault()
+				if (!settings.noPreventDefault) 
+					evt.preventDefault()
 				evt.stopPropagation()
 				break
 		}
