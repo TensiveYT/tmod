@@ -660,9 +660,9 @@ export function initChat(): Chat {
 		'keydown',
 		(evt: KeyboardEvent) => {
 			const input = evt.target as HTMLInputElement;
-			if (evt.keyCode === 13) {
-				if (gClient.isConnected() || input.value.startsWith(COMMAND_PREFIX)) {
-					const message = input.value;
+			if (evt.code === 'Enter') {
+				if (gClient.isConnected()) {
+					let message = input.value;
 					if (message.length === 0) {
 						if (getIsDming()) {
 							chat.endDM();
@@ -680,6 +680,13 @@ export function initChat(): Chat {
 							chat.blur();
 						}, 100);
 					}
+				} else {
+					let message = input.value
+					chat.send(message)
+					input.value = '';
+					setTimeout(() => {
+						chat.blur();
+					}, 100);
 				}
 				if (!settings.noPreventDefault) evt.preventDefault();
 				evt.stopPropagation();
