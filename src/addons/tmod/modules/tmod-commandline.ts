@@ -141,6 +141,7 @@ export const commands: Record<string, Command[]> = {
 /* initialization */
 export function initTCommandLine(): void {
 	let client = getClient()
+	let player = getTPlayer()
 
 	client.on('a', e => {
 		if (client.isConnected() && e.p._id !== client.participantId) return
@@ -150,6 +151,10 @@ export function initTCommandLine(): void {
 			let command = message.slice(COMMAND_PREFIX.length)
 			runCommand(command)
 		}
+	})
+
+	player.on('endOfFile', () => {
+		sendChat(COMMAND_SUCCESS_TAG + 'Playback finished!')
 	})
 }
 

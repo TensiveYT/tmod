@@ -104,6 +104,9 @@ export function initTPlayer(): Player {
 			}
 		}
 	})
+	hPlayer.on('endOfFile', () => {
+		logger.log('MIDIPlayer', 'Playback finished!')
+	})
 
 	state.addons.tmod.player = hPlayer
 	return hPlayer
