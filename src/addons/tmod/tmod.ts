@@ -3,7 +3,7 @@ import { initTCommandLine } from './modules/tmod-commandline'
 import { initTPlayer } from './modules/tmod-jmidiplayer'
 
 /* variables */
-export const VERSION = 'v0.1.0-alpha'
+export const VERSION = 'v0.1.1-alpha'
 
 /* initialization */
 export function initTMod(): void {

@@ -48,6 +48,29 @@ export const commands: Record<string, Command[]> = {
 					}
 				}
 			}
+		},
+		{
+			id: 'js',
+			description: 'Shows information about commands within the T-Mod Command Line.',
+			function: async(...args): Promise<CommandResultCode> => {
+				let input = args.slice(1).join(' ')
+				try {
+					let result = eval(input)
+					sendChat('✅ | ' + (
+						typeof result === 'object' 
+							? JSON.stringify(result) 
+							: (
+								typeof result === 'number'
+									? result.toLocaleString()
+									: result?.toString?.() ?? 'undefined'
+							)
+					))
+					return 0
+				} catch (error) {
+					sendChat(`❌ | ${error.message}`)
+					return 1
+				}
+			}
 		}
 	],
 	playback: [
@@ -96,7 +119,10 @@ export const commands: Record<string, Command[]> = {
 						sendChat('A file dialog should now open.')
 						let result = await loadFromFile()
 
-						sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
+						if (result)
+							sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
+						else
+							sendChat(`No file was chosen.`)
 						break
 					}
 				}

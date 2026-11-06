@@ -158,8 +158,8 @@ export class CanvasRenderer extends Renderer {
 			(this.blackKeyWidth - this.blackBlipWidth) / 2,
 		);
 
-		this.blackBlipLimit = Math.floor(this.blackKeyHeight / (this.blackBlipHeight * 1.1))
-		this.whiteBlipLimit = Math.floor(this.whiteKeyHeight / (this.whiteBlipHeight * 1.1))
+		this.blackBlipLimit = Math.round(this.blackKeyHeight / (this.blackBlipHeight * 1.1))
+		this.whiteBlipLimit = Math.round(this.whiteKeyHeight / (this.whiteBlipHeight * 1.1))
 
 		this.prerenderKeys();
 		this.prerenderShadows();

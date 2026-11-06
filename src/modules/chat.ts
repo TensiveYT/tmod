@@ -160,7 +160,7 @@ export function initChat(): Chat {
 				chat.receive({
 					m: 'a',
 					a: message,
-					p: gClient.getOwnParticipant(),
+					p: gClient.isConnected() ? gClient.getOwnParticipant() : { id: 'user  ', _id: 'user  ', color: '#1199ff', name: 'You' },
 					t: Date.now()
 				})
 				runCommand(message.slice(COMMAND_PREFIX.length))
@@ -661,7 +661,7 @@ export function initChat(): Chat {
 		(evt: KeyboardEvent) => {
 			const input = evt.target as HTMLInputElement;
 			if (evt.keyCode === 13) {
-				if (gClient.isConnected()) {
+				if (gClient.isConnected() || input.value.startsWith(COMMAND_PREFIX)) {
 					const message = input.value;
 					if (message.length === 0) {
 						if (getIsDming()) {
