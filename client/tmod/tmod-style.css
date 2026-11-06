@@ -1,6 +1,44 @@
-#tmod-version {
+@property --tmod-rainbow-color {
+  	syntax: "<number>";
+  	initial-value: 0;
+  	inherits: true;
+}
+
+:root {
+  	--tmod-rainbow-color: 0;
+  	animation: animate 10s linear infinite;
+}
+
+@keyframes animate {
+	from {
+		--tmod-rainbow-color: 0;
+	}
+	to {
+		--tmod-rainbow-color: 360;
+	}
+}
+
+tmod-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 100%;
+	height: 100%
+}
+
+tmod-tag {
+	display: block
+}
+
+tmod-tag {
 	text-align: right;
 	width: 100%;
 	position: fixed;
-	top: 64px
+	font-size: 13px;
+	top: calc(100% - 80px - 42px)
+}
+
+tmod-tag div#tmod-tag-name {
+	color: hsl(calc(var(--tmod-rainbow-color)), 50%, 76%)
 }

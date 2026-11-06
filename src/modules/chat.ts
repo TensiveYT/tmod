@@ -30,7 +30,7 @@ import { i18next } from '../util/translations';
 
 
 /* import: t-mod settings */
-import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from './settings/tmod/tmod-chat'
+import { ENABLE_CHAT_BLUR_ON_MESSAGE, ENABLE_CLIENT_SIDE_COMMAND_LINE } from './settings/tmod/tmod-chat'
 
 /* import: t-mod modules */
 import { COMMAND_PREFIX, runCommand } from '../addons/tmod/modules/tmod-commandline';
@@ -69,7 +69,11 @@ export function initChat(): Chat {
 		releaseKeyboard();
 	};
 
-	const messageCache: ChatMessage[] = [];
+	const messageCache: ChatMessage[] = []
+
+	let history: string[] = []
+	let historyIndex = 0
+	let msgInProgress: string
 
 	const chat: Chat = {
 		isShown: true,
@@ -665,44 +669,88 @@ export function initChat(): Chat {
 	(document.querySelector('#chat input')! as HTMLInputElement).addEventListener(
 		'keydown',
 		(evt: KeyboardEvent) => {
-			const input = evt.target as HTMLInputElement;
-			if (evt.code === 'Enter') {
-				if (gClient.isConnected()) {
-					let message = input.value;
-					if (message.length === 0) {
-						if (getIsDming()) {
-							chat.endDM();
+			let input = evt.target as HTMLInputElement
+			switch (evt.code) {
+				case 'Enter':
+					if (gClient.isConnected()) {
+						let message = input.value;
+						if (message.length === 0) {
+							if (getIsDming()) {
+								chat.endDM();
+							}
+							if (getIsReplying()) {
+								chat.cancelReply(getReplyParticipant())
+							}
+							if (ENABLE_CHAT_BLUR_ON_MESSAGE)
+								setTimeout(() => {
+									chat.blur()
+								}, 100)
+						} else {
+							chat.send(message)
+							history.push(message)
+
+							input.value = ''
+							msgInProgress = undefined
+
+							historyIndex = history.length
+							
+							if (ENABLE_CHAT_BLUR_ON_MESSAGE)
+								setTimeout(() => {
+									chat.blur()
+								}, 100)
 						}
-						if (getIsReplying()) {
-							chat.cancelReply(getReplyParticipant());
-						}
-						setTimeout(() => {
-							chat.blur();
-						}, 100);
 					} else {
-						chat.send(message);
-						input.value = '';
-						setTimeout(() => {
-							chat.blur();
-						}, 100);
+						let message = input.value
+						chat.send(message)
+						input.value = ''
+						if (ENABLE_CHAT_BLUR_ON_MESSAGE)
+							setTimeout(() => {
+								chat.blur()
+							}, 100)
 					}
-				} else {
-					let message = input.value
-					chat.send(message)
-					input.value = '';
-					setTimeout(() => {
-						chat.blur();
-					}, 100);
-				}
-				if (!settings.noPreventDefault) evt.preventDefault();
-				evt.stopPropagation();
-			} else if (evt.keyCode === 27) {
-				chat.blur();
-				if (!settings.noPreventDefault) evt.preventDefault();
-				evt.stopPropagation();
-			} else if (evt.keyCode === 9) {
-				if (!settings.noPreventDefault) evt.preventDefault();
-				evt.stopPropagation();
+					if (!settings.noPreventDefault) 
+						evt.preventDefault()
+					evt.stopPropagation()
+					break
+				case 'Escape':
+					chat.blur();
+					if (!settings.noPreventDefault) 
+						evt.preventDefault()
+					evt.stopPropagation()
+					break
+				case 'Tab':
+					if (!settings.noPreventDefault) 
+						evt.preventDefault()
+					evt.stopPropagation()
+					break
+				case 'ArrowUp':
+					if (historyIndex > 0) {
+						historyIndex--
+
+						if (!msgInProgress)
+							msgInProgress = input.value
+
+						input.value = history[historyIndex]
+					}
+
+					if (!settings.noPreventDefault) 
+						evt.preventDefault()
+					evt.stopPropagation()
+					break
+				case 'ArrowDown':
+					if (historyIndex === history.length - 1) {
+						input.value = msgInProgress
+					} else {
+						if (historyIndex < history.length - 1)
+							historyIndex++
+
+						input.value = history[historyIndex]
+					}
+
+					if (!settings.noPreventDefault) 
+						evt.preventDefault()
+					evt.stopPropagation()
+					break
 			}
 		},
 	);

@@ -8,6 +8,6 @@ so, I made T-Mod
 to build it:
 1. install [Bun](https://bun.com)
 2. run `bun install`
-3. run `bun build`
+3. run `bun build:min`
 
 pretty easy

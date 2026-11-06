@@ -6,7 +6,7 @@ export const USE_BLIP_LIMIT               = true
 export const ENABLE_CLIENT_SIDE_PLAYBACK  = true
 
 /* MIDI */
-export const DISABLE_MIDI_OUTPUT          = true
+export const DISABLE_MIDI_OUTPUT          = false
 
 /* piano */
 export const DISABLE_PIANO_SHADOWS        = true
