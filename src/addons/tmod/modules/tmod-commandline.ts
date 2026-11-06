@@ -21,12 +21,13 @@ export const commands: Record<string, Command[]> = {
 			function: async (...args): Promise<CommandResultCode> => {
 				if (args.length === 1) {
 					let categories = Object.keys(commands)
-					sendChat(`Command categories: ${categories.map(c => `\`${c}\``).join(', ')}`)
+					sendChat(COMMAND_SUCCESS_TAG + `Command categories: ${categories.map(c => `\`${c}\``).join(', ')}`)
 					return 0
 				} else {
 					if (commands[args[1]]) {
 						let category = commands[args[1]]
-						sendChat(`Commands within category \`${args[1]}\`: ${category.map(c => `\`${c.id}\``).join(', ')}`)
+						sendChat(COMMAND_SUCCESS_TAG + `Commands within category \`${args[1]}\`: ${category.map(c => `\`${c.id}\``).join(', ')}`)
+						return 0
 					} else {
 						let commandID = args[1]
 						for (let categoryID in commands) {
@@ -35,7 +36,7 @@ export const commands: Record<string, Command[]> = {
 
 							if (!command) continue
 							else {
-								sendChat(`[T-Mod] Command \`${command.id}\` — *${command.description}*`)
+								sendChat(COMMAND_SUCCESS_TAG + `Command \`${command.id}\` — *${command.description}*`)
 								return 0
 							}
 						}
@@ -50,10 +51,10 @@ export const commands: Record<string, Command[]> = {
 				let input = args.slice(1).join(' ')
 				try {
 					let result = eval(input)
-					sendChat('✅ | ' + (typeof result === 'object' ? JSON.stringify(result) : typeof result === 'number' ? result.toLocaleString() : (result?.toString?.() ?? 'undefined')))
+					sendChat(COMMAND_SUCCESS_TAG + (typeof result === 'object' ? JSON.stringify(result) : typeof result === 'number' ? result.toLocaleString() : (result?.toString?.() ?? 'undefined')))
 					return 0
 				} catch (error) {
-					sendChat(`❌ | ${error.message}`)
+					sendChat(COMMAND_ERROR_TAG + `${error.message}`)
 					return 1
 				}
 			}
@@ -65,7 +66,7 @@ export const commands: Record<string, Command[]> = {
 			description: 'Play the currently loaded MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				play()
-				sendChat('Playing the currently loaded MIDI.')
+				sendChat(COMMAND_SUCCESS_TAG + 'Playing the currently loaded MIDI.')
 				return 0
 			}
 		},
@@ -74,7 +75,7 @@ export const commands: Record<string, Command[]> = {
 			description: 'Pause the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				pause()
-				sendChat('The currently playing MIDI has been paused.')
+				sendChat(COMMAND_SUCCESS_TAG + 'The currently playing MIDI has been paused.')
 				return 0
 			}
 		},
@@ -83,7 +84,7 @@ export const commands: Record<string, Command[]> = {
 			description: 'Stop the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				stop()
-				sendChat('The currently playing MIDI has been stopped.')
+				sendChat(COMMAND_SUCCESS_TAG + 'The currently playing MIDI has been stopped.')
 				return 0
 			}
 		},
@@ -96,24 +97,29 @@ export const commands: Record<string, Command[]> = {
 				let player = getTPlayer()
 				switch (type) {
 					case 'url': {
-						sendChat('Loading…')
+						if (!args[2]) {
+							sendChat(`❌ | No URL was specified.`)
+							return 1
+						}
+
+						sendChat(COMMAND_INFO_TAG + 'Loading…')
 						let result = await loadFromURL(args[2])
 						
-						sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
+						sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
 						if (ENABLE_AUTO_PLAY_ON_LOAD)
 							play()
 						break
 					}
 					case 'file_dialog': {
-						sendChat('A file dialog should now open.')
+						sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
 						let result = await loadFromFile()
 
 						if (result) {
-							sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
+							sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
 							if (ENABLE_AUTO_PLAY_ON_LOAD)
 								play()
 						} else 
-							sendChat(`No file was chosen.`)
+							sendChat(COMMAND_INFO_TAG + `No file was chosen.`)
 						break
 					}
 				}
@@ -125,7 +131,7 @@ export const commands: Record<string, Command[]> = {
 			description: 'Unload a MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				unload()
-				sendChat('Unloaded the currently loaded MIDI.')
+				sendChat(COMMAND_SUCCESS_TAG + 'Unloaded the currently loaded MIDI.')
 				return 0
 			}
 		}
@@ -162,17 +168,20 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 			try {
 				return await command.function(...args)
 			} catch (error) {
-				sendChat(`❌ | ${error.message}`)
+				sendChat(COMMAND_ERROR_TAG + `${error.message}`)
 				console.error(error)
 				return 1
 			}
 	}
-	sendChat(`Cannot find command \`${commandID}\`.`)
+	sendChat(COMMAND_ERROR_TAG + `Cannot find command \`${commandID}\`.`)
 	return 1
 }
 
 /* tags */
 export const TMOD_TAG = '**[T]:** '
+export const COMMAND_INFO_TAG    = `🟦 | `
+export const COMMAND_ERROR_TAG   = `❌ | `
+export const COMMAND_SUCCESS_TAG = `✅ | `
 
 /* chat features */
 export function sendChat(message: string) {
