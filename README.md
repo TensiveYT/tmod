@@ -9,4 +9,5 @@ to build it:
 1. install [Bun](https://bun.com)
 2. run `bun install`
 3. run `bun build`
+
 pretty easy
