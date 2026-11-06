@@ -1,6 +1,6 @@
 /* import: packages */
 import      Player from '../../../libs/packages/jmidiplayer/index'
-import * as fflate from '../../../libs/packages/fflate/src/index'
+import * as fflate from '../../../libs/packages/fflate/index'
 
 /* import: types */
 import { MIDILoaderStatus } from './tmod-types'
@@ -156,7 +156,7 @@ export async function loadFromURL(uri: string): Promise<[number, number]> {
 
 	if (cty === 'application/zip') {
 		setLoaderStatus('unzipping')
-		let files: fflate.Unzipped = await new Promise((resolve, reject) => {
+		let files = await new Promise((resolve, reject) => {
 			fflate.unzip(gdt, (err, files) => {
 				if (err) reject(err);
 				else resolve(files);
@@ -203,7 +203,7 @@ export async function loadFromFile(): Promise<[number, number]> {
 
 	if (cty === 'application/zip') {
 		setLoaderStatus('unzipping')
-		let files: fflate.Unzipped = await new Promise((resolve, reject) => {
+		let files = await new Promise((resolve, reject) => {
 			fflate.unzip(gdt, (err, files) => {
 				if (err) reject(err);
 				else resolve(files);
