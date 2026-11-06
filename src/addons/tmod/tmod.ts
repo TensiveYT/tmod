@@ -12,7 +12,7 @@ export const tmodContainer = document.createElement('tmod-container')
 export function initTMod(): void {
 	// tag
 	let tag = document.createElement('tmod-tag')
-	tag.innerHTML = `<div id='tmod-tag-name'>T-Mod</div><i id='tmod-tag-version' style='opacity: 0.5'>version ${VERSION}</i>`
+	tag.innerHTML = `<div id='tmod-tag-name'>T-Mod</div><i id='tmod-tag-version' style='opacity: 0.5'>${VERSION}</i>`
 
 	tmodContainer.appendChild(tag)
 
