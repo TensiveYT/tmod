@@ -61,15 +61,19 @@ export function fadeOut(el: HTMLElement | undefined | null, ms: number, cb?: () 
 
 export class EventEmitter {
 	_events: Record<string, ((...data: any[]) => void)[]>
+	_maxListeners: number
 
 	constructor() {
 		this._events = {}
+		this._maxListeners = 10
 	}
 
 	on(en: string, fn: (...data: any[]) => void) {
 		if (!(en in this._events)) this._events[en] = []
 
 		this._events[en].push(fn)
+
+		if (this._events[en].length > this._maxListeners) console.warn('Maximum event listener count exceeded.')
 
 		return this
 	}
@@ -94,6 +98,18 @@ export class EventEmitter {
 		if (fns.length < 1) return
 
 		for (let i = 0; i < fns.length; i++) fns[i].apply(this, data) // <-- error
+	}
+
+	setMaxListeners(maxListeners: number) {
+		this._maxListeners = maxListeners
+	}
+
+	getMaxListeners() {
+		return this._maxListeners
+	}
+
+	removeAllListeners() {
+		this._events = {}
 	}
 }
 
