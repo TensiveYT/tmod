@@ -3,7 +3,7 @@ import { initTCommandLine } from './modules/tmod-commandline'
 import { initTPlayer } from './modules/tmod-jmidiplayer'
 
 /* variables */
-export const VERSION = 'v0.2.0-alpha'
+export const VERSION = 'v0.2.1-alpha'
 
 /* screen elements */
 export const tmodContainer = document.createElement('tmod-container')
