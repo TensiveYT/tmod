@@ -6,6 +6,6 @@ export const DISABLE_NAME_BOUNCING        = true
 export const DISABLE_PIANO_SHADOWS        = true
 export const DISABLE_PIANO_KEY_BOUNCING   = true
 export const DISABLE_UNLOADED_KEY_OPACITY = true
-export const DISABLE_MIDI_OUTPUT          = true
+export const DISABLE_MIDI_OUTPUT          = false
 
 export const DISABLE_VOICE_FADING         = true
