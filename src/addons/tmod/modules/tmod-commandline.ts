@@ -155,6 +155,7 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 			} catch (error) {
 				sendChat(`❌ | ${error.message}`)
 				console.error(error)
+				return 1
 			}
 	}
 	sendChat(`Cannot find command \`${commandID}\`.`)
