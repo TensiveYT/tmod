@@ -13,6 +13,7 @@ import {
 	USE_AUDIO_ENGINE, 
 	USE_DENQUE_BLIP_ARRAY 
 } from '../modules/settings/tmod/tmod-optimization';
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano';
 
 export class PianoKey {
 	note: string;
@@ -47,7 +48,7 @@ export class Piano {
 		let white_spatial = 0;
 		let black_spatial = 0;
 		let black_it = 0;
-		const black_lut = [2, 1, 2, 1, 1];
+		const black_lut = USE_128_KEYS ? [1, 2, 1, 1, 2] : [2, 1, 2, 1, 1]
 
 		const addKey = (note: string, octave: number) => {
 			const key = new PianoKey(note, octave);
@@ -64,14 +65,29 @@ export class Piano {
 		if (settings.testMode) {
 			addKey('c', 2);
 		} else {
-			addKey('a', -1);
-			addKey('as', -1);
-			addKey('b', -1);
-			const notes = 'c cs d ds e f fs g gs a as b'.split(' ');
-			for (let oct = 0; oct < 7; oct++) {
-				for (const n of notes) addKey(n, oct);
+			if (!USE_128_KEYS) {
+				addKey('a', -1)
+				addKey('as', -1)
+				addKey('b', -1)
+				let notes = 'c cs d ds e f fs g gs a as b'.split(' ')
+				for (let oct = 0; oct < 7; oct++) {
+					for (let n of notes) addKey(n, oct)
+				}
+				addKey('c', 7)
+			} else {
+				let notes = 'c cs d ds e f fs g gs a as b'.split(' ')
+				for (let oct = -2; oct < 8; oct++) {
+					for (let n of notes) addKey(n, oct)
+				}
+				addKey('c', 8)
+				addKey('cs', 8)
+				addKey('d', 8)
+				addKey('ds', 8)
+				addKey('e', 8)
+				addKey('f', 8)
+				addKey('fs', 8)
+				addKey('g', 8)
 			}
-			addKey('c', 7);
 		}
 
 		this.renderer = new CanvasRenderer().init(this);

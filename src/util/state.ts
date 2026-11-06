@@ -6,7 +6,7 @@ import { SoundSelector } from '../libs/SoundSelector';
 
 import {AudioEngineWeb} from '../piano/audio';
 
-/* import: hypermod */
+/* import: tmod */
 import Player from '../libs/packages/jmidiplayer';
 
 export interface Piano {
@@ -54,7 +54,7 @@ export const state = {
 	soundSelector: null as SoundSelector | null,
 	chat: null as Chat | null,
 	addons: {
-		hypermod: {
+		tmod: {
 			player: null as Player | null
 		}
 	},

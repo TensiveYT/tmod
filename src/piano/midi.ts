@@ -15,7 +15,10 @@ import {
 	MIDI_TRANSPOSE 
 } from '../util/constants';
 import { MidiInputInfo } from '../types';
-import { DISABLE_MIDI_OUTPUT } from '../modules/settings/tmod/tmod-optimization';
+
+/* import: settings */
+import { DISABLE_MIDI_OUTPUT } from '../modules/settings/tmod/tmod-optimization'
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano'
 
 export function initMidi(): void {
 	const gClient = getClient();
@@ -150,13 +153,12 @@ export function initMidi(): void {
 							if (note_number === undefined) 
 								return
 
-							let nn = note_number + 9 - MIDI_TRANSPOSE
+							let nn = USE_128_KEYS ? note_number : (note_number + 9 - MIDI_TRANSPOSE)
 
 							for (let i = 0; i < outs.length; i++) {
 								let output = outs[i]
 								if (!output.enabled)
 									continue
-
 								output.port.send(
 									[0x90, nn, vel * output.volume],
 									timestamp,

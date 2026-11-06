@@ -14,7 +14,7 @@ import {
 } from './tmod-types'
 
 /* import: constants */
-import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-miscellaneous'
+import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
 
 /* commands */
 export const COMMAND_PREFIX = '!'
@@ -106,19 +106,18 @@ export const commands: Record<string, Command[]> = {
 			description: 'Load a MIDI.',
 			function: async(...args): Promise<CommandResultCode> => {
 				let type = args[1]
+
 				let player = getTPlayer()
 				switch (type) {
 					case 'url': {
 						sendChat('Loading…')
 						let result = await loadFromURL(args[2])
-
 						sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
 						break
 					}
 					case 'file_dialog': {
 						sendChat('A file dialog should now open.')
 						let result = await loadFromFile()
-
 						if (result)
 							sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
 						else
@@ -170,19 +169,23 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 		if (!command)
 			continue
 		else
-			return await command.function(...args)
+			try {
+				return await command.function(...args)
+			} catch (error) {
+				sendChat(`❌ | ${error.message}`)
+				console.error(error)
+			}
 	}
 	sendChat(`Cannot find command \`${commandID}\`.`)
 	return 1
 }
 
 /* tags */
-export const TMOD_TAG = '**[T]:**'
+export const TMOD_TAG = '**[T]:** '
 
 /* chat features */
 export function sendChat(message: string) {
 	if (ENABLE_CLIENT_SIDE_COMMAND_LINE) {
-		let client = getClient()
 		state.chat.receive({
 			m: 'a',
 			a: message,

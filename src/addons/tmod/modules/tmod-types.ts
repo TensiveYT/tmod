@@ -6,3 +6,6 @@ export interface Command {
 	description: string
 	function: (...args: string[]) => Promise<CommandResultCode>
 }
+
+/* jmidiplayer */
+export type MIDILoaderStatus = 'idle' | 'waiting_for_file' | 'fetching' | 'unzipping' | 'converting_ab' | 'loading'

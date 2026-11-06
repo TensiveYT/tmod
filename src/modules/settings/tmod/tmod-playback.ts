@@ -1,3 +1,4 @@
+/* customization */
 export const COLOR_PALETTE = [
     '#3366ff',
     '#ff7e33',

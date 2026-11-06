@@ -15,6 +15,9 @@ import {
 	USE_BLIP_LIMIT,
 	USE_DENQUE_BLIP_ARRAY 
 } from '../modules/settings/tmod/tmod-optimization';
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano';
+
+export const WHITE_KEY_COUNT = USE_128_KEYS ? 75 : 52
 
 export class Renderer {
 	piano!: PianoInterface;
@@ -124,7 +127,7 @@ export class CanvasRenderer extends Renderer {
 	}
 	resize(width?: number, height?: number): void {
 		super.resize(width, height);
-		if (this.width < 52 * 2) this.width = 52 * 2;
+		if (this.width < WHITE_KEY_COUNT * 2) this.width = WHITE_KEY_COUNT * 2;
 		if (this.height < this.width * 0.2)
 			this.height = Math.floor(this.width * 0.2);
 		this.canvas.width = this.width;
@@ -132,7 +135,7 @@ export class CanvasRenderer extends Renderer {
 		this.canvas.style.width = this.width / window.devicePixelRatio + 'px';
 		this.canvas.style.height = this.height / window.devicePixelRatio + 'px';
 
-		this.whiteKeyWidth = Math.floor(this.width / 52);
+		this.whiteKeyWidth = Math.floor(this.width / WHITE_KEY_COUNT);
 		this.whiteKeyHeight = Math.floor(this.height * 0.9);
 		this.blackKeyWidth = Math.floor(this.whiteKeyWidth * 0.75);
 		this.blackKeyHeight = Math.floor(this.height * 0.5);
@@ -323,10 +326,10 @@ export class CanvasRenderer extends Renderer {
 			if (!DISABLE_PIANO_SHADOWS)
 				this.ctx.drawImage(this.shadowRender[j], 0, 0);
 			const sharp = j ? true : false;
-			for (const i in this.piano.keys) {
-				if (!this.piano.keys.hasOwnProperty(i)) continue;
-				const key = this.piano.keys[i];
-				if (key.sharp !== sharp) continue;
+			for (let i in this.piano.keys) {
+				if (!Object.hasOwn(this.piano.keys, i)) continue
+				let key = this.piano.keys[i]
+				if (key.sharp !== sharp) continue
 
 				if (!DISABLE_UNLOADED_KEY_OPACITY) {
 					if (!key.loaded) {
@@ -456,6 +459,7 @@ export class CanvasRenderer extends Renderer {
 					v *= DEFAULT_VELOCITY;
 					if (v > 1.0) v = 1.0;
 					return { key, v };
+					
 				}
 			}
 		}

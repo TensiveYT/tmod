@@ -2,7 +2,13 @@ import { Notification } from './Notification';
 import type { Piano } from '../piano/piano';
 import type { SoundPack } from '../types';
 
-const soundDomain =
+/* import: constants */
+import { MIDI_KEY_NAMES } from '../util/constants';
+
+/* import: settings */
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano';
+
+let soundDomain =
 	window.location.hostname === 'localhost'
 		? `http://${location.host}`
 		: 'https://multiplayerpiano.net';
@@ -114,8 +120,8 @@ export class SoundSelector {
 		let pack: string | SoundPack = name;
 		for (let i = 0; i < this.packs.length; i++) {
 			if (this.packs[i].name === name) {
-				pack = this.packs[i];
-				break;
+				pack = this.packs[i]
+				break
 			}
 		}
 		if (typeof pack === 'string') {
@@ -127,33 +133,47 @@ export class SoundSelector {
 			this.piano.keys = {} as any;
 			for (let i = 0; i < pack.keys.length; i++)
 				(this.piano.keys as any)[pack.keys[i]] = this.keys[pack.keys[i]];
-			this.piano.renderer.resize();
+			this.piano.renderer.resize()
 		}
-		for (const i in this.piano.keys) {
-			if (!this.piano.keys.hasOwnProperty(i)) continue;
-			const key = (this.piano.keys as any)[i];
-			key.loaded = false;
-			let useDomain = true;
-			if (pack.url.match(/^(http|https):\/\//i)) useDomain = false;
+		for (let i in this.piano.keys) {
+			if (!Object.hasOwn(this.piano.keys, i)) 
+				continue
+
+			// ignore MIDI keys above the normal limit
+			if (
+				USE_128_KEYS &&
+				(MIDI_KEY_NAMES.indexOf(i) < 21 || MIDI_KEY_NAMES.indexOf(i) > 108)
+			) {
+				let key = (this.piano.keys as any)[i]
+				key.loaded = true
+				continue
+			}
+
+			let key = (this.piano.keys as any)[i]
+			key.loaded = false
+
+			let useDomain = true
+			if (pack.url.match(/^(http|https):\/\//i)) useDomain = false
+
 			this.piano.audio.load(
 				key.note,
 				(useDomain ? soundDomain : '') + pack.url + key.note + pack.ext,
 				() => {
-					key.loaded = true;
-					key.timeLoaded = Date.now();
+					key.loaded = true
+					key.timeLoaded = Date.now()
 				},
-			);
+			)
 		}
-		if (localStorage) localStorage.soundSelection = pack.name;
-		this.soundSelection = pack.name;
+		if (localStorage) localStorage.soundSelection = pack.name
+		this.soundSelection = pack.name
 	}
 
 	removePack(name: string): void {
 		for (let i = 0; i < this.packs.length; i++) {
 			if (this.packs[i].name === name) {
-				this.packs.splice(i, 1);
-				if (name === this.soundSelection) this.loadPack(this.packs[0].name);
-				return;
+				this.packs.splice(i, 1)
+				if (name === this.soundSelection) this.loadPack(this.packs[0].name)
+				return
 			}
 		}
 		console.warn('Sound pack not found!');

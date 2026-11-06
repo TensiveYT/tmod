@@ -87,13 +87,13 @@ export class AudioEngineWeb extends AudioEngine {
 	load(id: string, url: string, cb?: () => void): void {
 		fetch(url)
 			.then(res => {
-				if (!res.ok) throw new Error(`HTTP ${res.status}`);
-				return res.arrayBuffer();
+				if (!res.ok) throw new Error(`HTTP ${res.status}`)
+				return res.arrayBuffer()
 			})
 			.then(buffer => this.context.decodeAudioData(buffer))
 			.then(decoded => {
-				this.sounds[id] = decoded;
-				cb?.();
+				this.sounds[id] = decoded
+				cb?.()
 			})
 			.catch(e => {
 				new Notification({

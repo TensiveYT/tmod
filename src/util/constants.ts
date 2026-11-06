@@ -1,15 +1,29 @@
+/* import: settings */
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano';
+
 export const DEFAULT_VELOCITY = 0.5;
 export const TIMING_TARGET = 1000;
 export const MIDI_TRANSPOSE = -12;
 
 export const MIDI_KEY_NAMES: string[] = (() => {
-	const names = ['a-1', 'as-1', 'b-1'];
-	const bare = 'c cs d ds e f fs g gs a as b'.split(' ');
-	for (let oct = 0; oct < 7; oct++) {
-		for (const n of bare) names.push(n + oct);
+	if (!USE_128_KEYS) {
+		let names = ['a-1', 'as-1', 'b-1']
+		let bare = 'c cs d ds e f fs g gs a as b'.split(' ')
+		for (let oct = 0; oct < 7; oct++) {
+			for (let n of bare) names.push(n + oct)
+		}
+		names.push('c7')
+
+		return names
+	} else {
+		let names = []
+		let bare = 'c cs d ds e f fs g gs a as b'.split(' ')
+		for (let oct = -2; oct < 8; oct++) {
+			for (let n of bare) names.push(n + oct)
+		}
+		names.push('c8', 'cs8', 'd8', 'ds8', 'e8', 'f8', 'fs8', 'g8')
+		return names
 	}
-	names.push('c7');
-	return names;
 })()
 
 export const MIDI_NOTE_NUMBERS = new Map(

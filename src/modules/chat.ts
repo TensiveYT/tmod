@@ -27,6 +27,12 @@ import {
 } from './connection';
 import type { ChatMessage } from '../types';
 import { i18next } from '../util/translations';
+
+
+/* import: t-mod settings */
+import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from './settings/tmod/tmod-chat'
+
+/* import: t-mod modules */
 import { COMMAND_PREFIX, runCommand } from '../addons/tmod/modules/tmod-commandline';
 
 export interface Chat {
@@ -156,7 +162,7 @@ export function initChat(): Chat {
 		},
 
 		send(message: string): void {
-			if (message.startsWith(COMMAND_PREFIX)) {
+			if (message.startsWith(COMMAND_PREFIX) && ENABLE_CLIENT_SIDE_COMMAND_LINE) {
 				chat.receive({
 					m: 'a',
 					a: message,
