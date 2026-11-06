@@ -1,65 +1,53 @@
-import { state } from './util/state';
-import { Piano } from './piano/piano';
-import { SoundSelector } from './libs/SoundSelector';
-import { initConnection } from './modules/connection';
-import { initKeyboard } from './modules/keyboard';
-import { initRooms } from './modules/rooms';
-import { initChat } from './modules/chat';
-import { initMidi } from './piano/midi';
-import { initSynth } from './piano/synth';
-import { initSettingsUI } from './modules/settings/settings-ui';
+import { state } from './util/state'
+import { Piano } from './piano/piano'
+import { SoundSelector } from './libs/SoundSelector'
+import { initConnection } from './modules/connection'
+import { initKeyboard } from './modules/keyboard'
+import { initRooms } from './modules/rooms'
+import { initChat } from './modules/chat'
+import { initMidi } from './piano/midi'
+import { initSynth } from './piano/synth'
+import { initSettingsUI } from './modules/settings/settings-ui'
 
 import { Notification } from './libs/Notification'
-import {
-	press,
-	release,
-	pressSustain,
-	releaseSustain,
-	setPress,
-	setRelease,
-	setPressSustain,
-	setReleaseSustain,
-} from './util/actions';
-import { i18next, i18nextify, start } from './util/translations';
-import { closeModal, getModal, openModal } from './util/modal';
-import { EventEmitter } from './util/util';
-import { initModals } from './modules/modals';
+import { press, release, pressSustain, releaseSustain, setPress, setRelease, setPressSustain, setReleaseSustain } from './util/actions'
+import { i18next, i18nextify, start } from './util/translations'
+import { closeModal, getModal, openModal } from './util/modal'
+import { EventEmitter } from './util/util'
+import { initModals } from './modules/modals'
 import { Client } from './libs/Client'
 
 // t-mod stuff
 import { initTMod } from './addons/tmod/tmod'
 
 if (location.host === 'multiplayerpiano.com') {
-	const url = new URL('https://multiplayerpiano.net/' + location.search);
-	if (localStorage.token) url.searchParams.set('token', localStorage.token);
-	location.replace(url.toString());
-	throw new Error('Redirecting to multiplayerpiano.net');
+	const url = new URL('https://multiplayerpiano.net/' + location.search)
+	if (localStorage.token) url.searchParams.set('token', localStorage.token)
+	location.replace(url.toString())
+	throw new Error('Redirecting to multiplayerpiano.net')
 }
 
 if (location.host === 'multiplayerpiano.net') {
-	const url = new URL(location.href);
-	const token = url.searchParams.get('token');
+	const url = new URL(location.href)
+	const token = url.searchParams.get('token')
 	if (token) {
-		localStorage.token = token;
-		url.searchParams.delete('token');
-		location.replace(url.toString());
-		throw new Error('Finalizing redirect.');
+		localStorage.token = token
+		url.searchParams.delete('token')
+		location.replace(url.toString())
+		throw new Error('Finalizing redirect.')
 	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	start();
+	start()
 
-	console.log('%cMPP Developer Console', 'color: #0066ff; font-size:20px;');
-	console.log(
-		'%cCheck out the client source: https://github.com/mppnet/frontend/tree/main/client\nGuide for developers: https://docs.google.com/document/d/1OrxwdLD1l1TE8iau6ToETVmnLuLXyGBhA0VfAY1Lf14/edit?usp=sharing',
-		'color:gray; font-size:12px;',
-	);
+	console.log('%cMPP Developer Console', 'color: #0066ff; font-size:20px;')
+	console.log('%cCheck out the client source: https://github.com/mppnet/frontend/tree/main/client\nGuide for developers: https://docs.google.com/document/d/1OrxwdLD1l1TE8iau6ToETVmnLuLXyGBhA0VfAY1Lf14/edit?usp=sharing', 'color:gray; font-size:12px;')
 
-	const piano = new Piano(document.getElementById('piano')!);
-	state.piano = piano;
+	const piano = new Piano(document.getElementById('piano')!)
+	state.piano = piano
 
-	const soundSelector = new SoundSelector(piano);
+	const soundSelector = new SoundSelector(piano)
 	soundSelector.addPacks([
 		'/sounds/Emotional/',
 		'/sounds/Emotional_2.0/',
@@ -80,16 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		'/sounds/Steinway_Grand/',
 		'/sounds/Untitled/',
 		'/sounds/Vintage_Upright/',
-		'/sounds/Vintage_Upright_Soft/',
-	]);
-	soundSelector.init();
-	state.soundSelector = soundSelector;
+		'/sounds/Vintage_Upright_Soft/'
+	])
+	soundSelector.init()
+	state.soundSelector = soundSelector
 
-	const client = initConnection();
-	const chat = initChat();
+	const client = initConnection()
+	const chat = initChat()
 	initKeyboard()
- 	initRooms()
-  	initModals()
+	initRooms()
+	initModals()
 	initMidi()
 	initSynth()
 	initSettingsUI()
@@ -98,9 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	initTMod()
 
 	if (window !== top) {
-		alert(
-			"Hey, it looks like you're visiting our site through another website. Consider playing Multiplayer Piano directly at https://multiplayerpiano.net",
-		);
+		alert("Hey, it looks like you're visiting our site through another website. Consider playing Multiplayer Piano directly at https://multiplayerpiano.net")
 	}
 
 	const translationIdsWithNames = [
@@ -123,70 +109,65 @@ document.addEventListener('DOMContentLoaded', () => {
 		{ code: 'sk', name: 'Slovak', native: 'Slovenčina' },
 		{ code: 'sv', name: 'Swedish', native: 'Svenska' },
 		{ code: 'tr', name: 'Turkish', native: 'Türkçe' },
-		{ code: 'zh', name: 'Chinese', native: '中文' },
-	];
-	const languages = document.getElementById('languages')!;
+		{ code: 'zh', name: 'Chinese', native: '中文' }
+	]
+	const languages = document.getElementById('languages')!
 
 	function createTranslationOptions() {
 		translationIdsWithNames.forEach(z => {
-			const option = document.createElement('option');
-			option.value = z.code;
-			option.innerText = z.native;
-			if (z.code === i18next.language.split('-')[0]) option.selected = true;
-			option.setAttribute('translated', '');
-			languages.appendChild(option);
-		});
+			const option = document.createElement('option')
+			option.value = z.code
+			option.innerText = z.native
+			if (z.code === i18next.language.split('-')[0]) option.selected = true
+			option.setAttribute('translated', '')
+			languages.appendChild(option)
+		})
 	}
 
-	if (i18next.isInitialized) createTranslationOptions();
+	if (i18next.isInitialized) createTranslationOptions()
 	else
 		i18next.on('initialized', () => {
-			createTranslationOptions();
-		});
+			createTranslationOptions()
+		})
 
 	document.getElementById('lang-btn')!.addEventListener('click', () => {
-		openModal('#language');
-	});
-	document
-		.querySelector('#language > button')!
-		.addEventListener('click', async () => {
-			await i18next.changeLanguage(
-				(document.querySelector('#languages') as HTMLSelectElement)
-					.selectedOptions[0].value,
-			);
-			i18nextify.forceRerender();
-			closeModal();
-		});
+		openModal('#language')
+	})
+	document.querySelector('#language > button')!.addEventListener('click', async () => {
+		await i18next.changeLanguage((document.querySelector('#languages') as HTMLSelectElement).selectedOptions[0].value)
+		i18nextify.forceRerender()
+		closeModal()
+	})
 
-	client.start();
+	client.start()
 
-  globalThis.EventEmitter = EventEmitter;
-  globalThis.Client = Client;
+	globalThis.EventEmitter = EventEmitter
+	globalThis.Client = Client
 
-	(window as any).MPP = {
+	;(window as any).MPP = {
 		get press() {
-			return press;
+			return press
 		},
 		set press(fn: any) {
-			setPress(fn);
+			setPress(fn)
 		},
 		get release() {
-			return release;
+			return release
 		},
 		set release(fn: any) {
-			setRelease(fn);
+			setRelease(fn)
 		},
 		get pressSustain() {
-			return pressSustain;
+			return pressSustain
 		},
 		set pressSustain(fn: any) {
-			setPressSustain(fn);
+			setPressSustain(fn)
 		},
 		get releaseSustain() {
-			return releaseSustain;
+			return releaseSustain
 		},
 		set releaseSustain(fn: any) {
-			setReleaseSustain(fn);
+			setReleaseSustain(fn)
 		},
 		piano,
 		client,
@@ -198,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		modal: {
 			getModal,
 			closeModal,
-			openModal,
-		},
-	};
-});
+			openModal
+		}
+	}
+})

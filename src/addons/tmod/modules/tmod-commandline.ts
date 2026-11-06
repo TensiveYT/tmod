@@ -1,17 +1,11 @@
 /* import: utilities */
-import { 
-	getClient, 
-	state 
-} from '../../../util/state'
+import { getClient, state } from '../../../util/state'
 
 /* import: modules */
 import { getTPlayer, loadFromFile, loadFromURL, pause, play, stop, unload } from './tmod-jmidiplayer'
 
 /* import: types */
-import { 
-	Command, 
-	CommandResultCode 
-} from './tmod-types'
+import { Command, CommandResultCode } from './tmod-types'
 
 /* import: constants */
 import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
@@ -23,7 +17,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'help',
 			description: 'Shows information about commands within the T-Mod Command Line.',
-			function: async(...args): Promise<CommandResultCode> => {
+			function: async (...args): Promise<CommandResultCode> => {
 				if (args.length === 1) {
 					let categories = Object.keys(commands)
 					sendChat(`Command categories: ${categories.map(c => `\`${c}\``).join(', ')}`)
@@ -38,8 +32,7 @@ export const commands: Record<string, Command[]> = {
 							let category = commands[categoryID]
 							let command = category.find(cmd => cmd.id === commandID)
 
-							if (!command)
-								continue
+							if (!command) continue
 							else {
 								sendChat(`[T-Mod] Command \`${command.id}\` — *${command.description}*`)
 								return 0
@@ -52,19 +45,11 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'js',
 			description: 'Shows information about commands within the T-Mod Command Line.',
-			function: async(...args): Promise<CommandResultCode> => {
+			function: async (...args): Promise<CommandResultCode> => {
 				let input = args.slice(1).join(' ')
 				try {
 					let result = eval(input)
-					sendChat('✅ | ' + (
-						typeof result === 'object' 
-							? JSON.stringify(result) 
-							: (
-								typeof result === 'number'
-									? result.toLocaleString()
-									: result?.toString?.() ?? 'undefined'
-							)
-					))
+					sendChat('✅ | ' + (typeof result === 'object' ? JSON.stringify(result) : typeof result === 'number' ? result.toLocaleString() : (result?.toString?.() ?? 'undefined')))
 					return 0
 				} catch (error) {
 					sendChat(`❌ | ${error.message}`)
@@ -77,7 +62,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'play',
 			description: 'Play the currently loaded MIDI.',
-			function: async(): Promise<CommandResultCode> => {
+			function: async (): Promise<CommandResultCode> => {
 				play()
 				sendChat('Playing the currently loaded MIDI.')
 				return 0
@@ -86,7 +71,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'pause',
 			description: 'Pause the currently playing MIDI.',
-			function: async(): Promise<CommandResultCode> => {
+			function: async (): Promise<CommandResultCode> => {
 				pause()
 				sendChat('The currently playing MIDI has been paused.')
 				return 0
@@ -95,7 +80,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'stop',
 			description: 'Stop the currently playing MIDI.',
-			function: async(): Promise<CommandResultCode> => {
+			function: async (): Promise<CommandResultCode> => {
 				stop()
 				sendChat('The currently playing MIDI has been stopped.')
 				return 0
@@ -104,7 +89,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'load',
 			description: 'Load a MIDI.',
-			function: async(...args): Promise<CommandResultCode> => {
+			function: async (...args): Promise<CommandResultCode> => {
 				let type = args[1]
 
 				let player = getTPlayer()
@@ -118,10 +103,8 @@ export const commands: Record<string, Command[]> = {
 					case 'file_dialog': {
 						sendChat('A file dialog should now open.')
 						let result = await loadFromFile()
-						if (result)
-							sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
-						else
-							sendChat(`No file was chosen.`)
+						if (result) sendChat(`Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!`)
+						else sendChat(`No file was chosen.`)
 						break
 					}
 				}
@@ -131,7 +114,7 @@ export const commands: Record<string, Command[]> = {
 		{
 			id: 'unload',
 			description: 'Unload a MIDI.',
-			function: async(): Promise<CommandResultCode> => {
+			function: async (): Promise<CommandResultCode> => {
 				unload()
 				sendChat('Unloaded the currently loaded MIDI.')
 				return 0
@@ -145,8 +128,7 @@ export function initTCommandLine(): void {
 	let client = getClient()
 
 	client.on('a', e => {
-		if (client.isConnected() && e.p._id !== client.participantId)
-			return
+		if (client.isConnected() && e.p._id !== client.participantId) return
 
 		let message = e.a
 		if (message.startsWith(COMMAND_PREFIX)) {
@@ -166,8 +148,7 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 		let category = commands[categoryID]
 		let command = category.find(cmd => cmd.id === commandID)
 
-		if (!command)
-			continue
+		if (!command) continue
 		else
 			try {
 				return await command.function(...args)
@@ -192,6 +173,5 @@ export function sendChat(message: string) {
 			p: { _id: 'client', id: 'client', name: 'T-Mod', color: '#ffffff' },
 			t: Date.now()
 		})
-	} else 
-		state.chat.send(TMOD_TAG + message)
+	} else state.chat.send(TMOD_TAG + message)
 }

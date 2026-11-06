@@ -1,16 +1,16 @@
-import { Notification } from '../libs/Notification';
-import { state } from '../util/state';
+import { Notification } from '../libs/Notification'
+import { state } from '../util/state'
 
 /* import: hypermod settings */
-import { DISABLE_VOICE_FADING, USE_AUDIO_ENGINE } from '../modules/settings/tmod/tmod-optimization';
+import { DISABLE_VOICE_FADING, USE_AUDIO_ENGINE } from '../modules/settings/tmod/tmod-optimization'
 
 export class AudioEngine {
-	volume: number = 0.6;
-	sounds: Record<string, any> = {};
-	paused: boolean = true;
+	volume: number = 0.6
+	sounds: Record<string, any> = {}
+	paused: boolean = true
 
 	init(): this {
-		return this;
+		return this
 	}
 
 	load(_id: string, _url: string, _cb?: () => void): void {}
@@ -18,70 +18,61 @@ export class AudioEngine {
 	stop(_id: string, _delay_ms: number, _part_id: string): void {}
 
 	setVolume(vol: number): void {
-		this.volume = vol;
+		this.volume = vol
 	}
 
 	resume(): void {
-		this.paused = false;
+		this.paused = false
 	}
 }
 
 export class AudioEngineWeb extends AudioEngine {
-	threshold: number = 0;
-	worker: Worker;
-	context!: AudioContext;
-	masterGain!: GainNode;
-	limiterNode!: DynamicsCompressorNode;
-	pianoGain!: GainNode;
-	synthGain!: GainNode;
-	playings: Record<string, any> = {};
+	threshold: number = 0
+	worker: Worker
+	context!: AudioContext
+	masterGain!: GainNode
+	limiterNode!: DynamicsCompressorNode
+	pianoGain!: GainNode
+	synthGain!: GainNode
+	playings: Record<string, any> = {}
 
 	constructor() {
-		super();
-		this.worker = new Worker('/workerTimer.js');
+		super()
+		this.worker = new Worker('/workerTimer.js')
 		this.worker.onmessage = event => {
 			if (event.data.args) {
 				if (event.data.args.action === 0) {
-					this.actualPlay(
-						event.data.args.id,
-						event.data.args.vol,
-						event.data.args.time,
-						event.data.args.part_id,
-					);
+					this.actualPlay(event.data.args.id, event.data.args.vol, event.data.args.time, event.data.args.part_id)
 				} else {
-					this.actualStop(
-						event.data.args.id,
-						event.data.args.time,
-						event.data.args.part_id,
-					);
+					this.actualStop(event.data.args.id, event.data.args.time, event.data.args.part_id)
 				}
 			}
-		};
+		}
 	}
 	init(): this {
-		super.init();
-		this.context = new AudioContext({ latencyHint: 'interactive' });
-		this.masterGain = this.context.createGain();
-		this.masterGain.connect(this.context.destination);
-		this.masterGain.gain.value = this.volume;
+		super.init()
+		this.context = new AudioContext({ latencyHint: 'interactive' })
+		this.masterGain = this.context.createGain()
+		this.masterGain.connect(this.context.destination)
+		this.masterGain.gain.value = this.volume
 
-		this.limiterNode = this.context.createDynamicsCompressor();
-		this.limiterNode.threshold.value = -10;
-		this.limiterNode.knee.value = 0;
-		this.limiterNode.ratio.value = 20;
-		this.limiterNode.attack.value = 0;
-		this.limiterNode.release.value = 0.1;
-		this.limiterNode.connect(this.masterGain);
+		this.limiterNode = this.context.createDynamicsCompressor()
+		this.limiterNode.threshold.value = -10
+		this.limiterNode.knee.value = 0
+		this.limiterNode.ratio.value = 20
+		this.limiterNode.attack.value = 0
+		this.limiterNode.release.value = 0.1
+		this.limiterNode.connect(this.masterGain)
 
-		this.pianoGain = this.context.createGain();
-		this.pianoGain.gain.value = 0.5;
-		this.pianoGain.connect(this.limiterNode);
-		this.synthGain = this.context.createGain();
-		this.synthGain.gain.value = 0.5;
-		this.synthGain.connect(this.limiterNode);
+		this.pianoGain = this.context.createGain()
+		this.pianoGain.gain.value = 0.5
+		this.pianoGain.connect(this.limiterNode)
+		this.synthGain = this.context.createGain()
+		this.synthGain.gain.value = 0.5
+		this.synthGain.connect(this.limiterNode)
 
-		this.playings = {};
-		return this;
+		this.playings = {}
+		return this
 	}
 
 	load(id: string, url: string, cb?: () => void): void {
@@ -101,24 +92,20 @@ export class AudioEngineWeb extends AudioEngine {
 					title: 'Problem',
 					text: `For some reason, an audio download failed. ${e.message}`,
 					target: '#piano',
-					duration: 10000,
-				});
-			});
+					duration: 10000
+				})
+			})
 	}
 
 	actualPlay(id: string, vol: number, time: number, part_id: string): void {
-		if (vol <= 0)
-			return
+		if (vol <= 0) return
 
-		if (!USE_AUDIO_ENGINE)
-			return
+		if (!USE_AUDIO_ENGINE) return
 
-		if (this.paused) 
-			return
+		if (this.paused) return
 
-		const sound = this.sounds[id];
-		if (!sound) 
-			return
+		const sound = this.sounds[id]
+		if (!sound) return
 
 		const source = this.context.createBufferSource()
 		source.buffer = sound
@@ -130,87 +117,81 @@ export class AudioEngineWeb extends AudioEngine {
 		gain.connect(this.pianoGain)
 
 		source.start(time)
-		
+
 		if (this.playings[id]) {
 			if (!DISABLE_VOICE_FADING) {
-				const playing = this.playings[id];
-				playing.gain.gain.setValueAtTime(playing.gain.gain.value, time);
-				playing.gain.gain.linearRampToValueAtTime(0.0, time + 0.2);
-				playing.source.stop(time + 0.21);
+				const playing = this.playings[id]
+				playing.gain.gain.setValueAtTime(playing.gain.gain.value, time)
+				playing.gain.gain.linearRampToValueAtTime(0.0, time + 0.2)
+				playing.source.stop(time + 0.21)
 				if (state.enableSynth && playing.voice) {
-					playing.voice.stop(time);
+					playing.voice.stop(time)
 				}
 			} else {
-				const playing = this.playings[id];
+				const playing = this.playings[id]
 				playing.source.stop(time)
 				if (state.enableSynth && playing.voice) {
 					playing.voice.stop(time)
 				}
 			}
 		}
-		this.playings[id] = { source, gain, part_id };
+		this.playings[id] = { source, gain, part_id }
 		if (state.enableSynth && state.synthVoice) {
-			this.playings[id].voice = new state.synthVoice(id, time);
+			this.playings[id].voice = new state.synthVoice(id, time)
 		}
 	}
 	play(id: string, vol: number, delay_ms: number, part_id: string): void {
-		if (vol <= 0)
-			return
-		if (!USE_AUDIO_ENGINE)
-			return
-		if (!this.sounds.hasOwnProperty(id)) return;
-		const time = this.context.currentTime + delay_ms / 1000;
-		const delay = delay_ms - this.threshold;
-		if (delay <= 0) this.actualPlay(id, vol, time, part_id);
+		if (vol <= 0) return
+		if (!USE_AUDIO_ENGINE) return
+		if (!this.sounds.hasOwnProperty(id)) return
+		const time = this.context.currentTime + delay_ms / 1000
+		const delay = delay_ms - this.threshold
+		if (delay <= 0) this.actualPlay(id, vol, time, part_id)
 		else {
 			this.worker.postMessage({
 				delay,
-				args: { action: 0, id, vol, time, part_id },
-			});
+				args: { action: 0, id, vol, time, part_id }
+			})
 		}
 	}
 
 	actualStop(id: string, time: number, part_id: string): void {
-		if (!USE_AUDIO_ENGINE)
-			return
-		const playing = this.playings[id];
+		if (!USE_AUDIO_ENGINE) return
+		const playing = this.playings[id]
 
-		if (!playing || playing.part_id !== part_id)
-			return
+		if (!playing || playing.part_id !== part_id) return
 
-		const gain = this.playings[id].gain.gain;
-		gain.setValueAtTime(gain.value, time);
-		gain.linearRampToValueAtTime(gain.value * 0.1, time + 0.16);
-		gain.linearRampToValueAtTime(0.0, time + 0.4);
+		const gain = this.playings[id].gain.gain
+		gain.setValueAtTime(gain.value, time)
+		gain.linearRampToValueAtTime(gain.value * 0.1, time + 0.16)
+		gain.linearRampToValueAtTime(0.0, time + 0.4)
 
-		this.playings[id].source.stop(time + 0.41);
-		if (this.playings[id].voice)
-			this.playings[id].voice.stop(time)
+		this.playings[id].source.stop(time + 0.41)
+		if (this.playings[id].voice) this.playings[id].voice.stop(time)
 
 		delete this.playings[id]
 	}
 
 	stop(id: string, delay_ms: number, part_id: string): void {
-		if (!USE_AUDIO_ENGINE)
-			return
-		const time = this.context.currentTime + delay_ms / 1000;
-		const delay = delay_ms - this.threshold;
-		if (delay <= 0) this.actualStop(id, time, part_id);
+		if (!USE_AUDIO_ENGINE) return
+		const time = this.context.currentTime + delay_ms / 1000
+		const delay = delay_ms - this.threshold
+		if (delay <= 0) this.actualStop(id, time, part_id)
 		else {
 			this.worker.postMessage({
 				delay,
-				args: { action: 1, id, time, part_id },
-			});
+				args: { action: 1, id, time, part_id }
+			})
 		}
 	}
 
 	setVolume(vol: number): void {
-		super.setVolume(vol);
-		this.masterGain.gain.value = this.volume;
+		super.setVolume(vol)
+		this.masterGain.gain.value = this.volume
 	}
 
 	resume(): void {
-		this.paused = false;
-		this.context.resume();
+		this.paused = false
+		this.context.resume()
 	}
 }

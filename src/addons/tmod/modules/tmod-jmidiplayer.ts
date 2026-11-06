@@ -1,5 +1,5 @@
 /* import: packages */
-import      Player from '../../../libs/packages/jmidiplayer/index'
+import Player from '../../../libs/packages/jmidiplayer/index'
 import * as fflate from '../../../libs/packages/fflate/index'
 
 /* import: types */
@@ -36,23 +36,21 @@ export const STATUS_MESSAGES: Record<MIDILoaderStatus, string> = {
 	fetching: 'Fetching MIDI…',
 	unzipping: 'Unzipping MIDI…',
 	converting_ab: 'Converting MIDI’s ArrayBuffer into a TypedArray…',
-	loading: 'Loading MIDI…',
+	loading: 'Loading MIDI…'
 }
 export var loaderStatus: MIDILoaderStatus = 'idle'
 export function setLoaderStatus(status: MIDILoaderStatus) {
 	loaderStatus = status
 
 	let message = STATUS_MESSAGES[loaderStatus]
-	if (!message)
-		throw new Error('Loader set to an invalid status.')
+	if (!message) throw new Error('Loader set to an invalid status.')
 
 	logger.log('MIDILoader', message)
 }
 
 /* initialization */
 export function initTPlayer(): Player {
-	if (getIsPlayerInitialized())
-		return
+	if (getIsPlayerInitialized()) return
 
 	let hPlayer = new Player()
 	let piano = getPiano()
@@ -60,34 +58,25 @@ export function initTPlayer(): Player {
 
 	hPlayer.on('midiEvent', e => {
 		switch (e.type) {
-			case 0x08: { // note off
-				if (
-					!USE_128_KEYS &&
-					(e.note < 21 || e.note > 108)
-				)
-					return
+			case 0x08: {
+				// note off
+				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) return
 				let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 				piano.stop(key, { id: client.participantId }, 0)
-				if (!ENABLE_CLIENT_SIDE_PLAYBACK)
-					client.stopNote(key)
+				if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.stopNote(key)
 				break
 			}
-			case 0x09: { // note on
-				if (
-					!USE_128_KEYS &&
-					(e.note < 21 || e.note > 108)
-				)
-					return
+			case 0x09: {
+				// note on
+				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) return
 				if (e.velocity === 0) {
 					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 					piano.stop(key, { id: client.participantId }, 0)
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK)
-						client.stopNote(key)
+					if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.stopNote(key)
 				} else {
 					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
 					piano.play(key, e.velocity / 127, { id: client.participantId, color: COLOR_PALETTE[e.channel] }, 0)
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK)
-						client.startNote(key, e.velocity / 127)
+					if (!ENABLE_CLIENT_SIDE_PLAYBACK) client.startNote(key, e.velocity / 127)
 				}
 				break
 			}
@@ -100,8 +89,7 @@ export function initTPlayer(): Player {
 
 /* playback */
 export function play(): void {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	let hPlayer = getTPlayer()
 
@@ -110,8 +98,7 @@ export function play(): void {
 }
 
 export function pause(): void {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	let hPlayer = getTPlayer()
 
@@ -120,8 +107,7 @@ export function pause(): void {
 }
 
 export function stop(): void {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	let hPlayer = getTPlayer()
 
@@ -130,8 +116,7 @@ export function stop(): void {
 }
 
 export function seekTo(tick: number): void {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	let hPlayer = getTPlayer()
 
@@ -141,8 +126,7 @@ export function seekTo(tick: number): void {
 
 /* loading */
 export async function loadFromURL(uri: string): Promise<[number, number]> {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	setLoaderStatus('fetching')
 	let url = new URL(uri)
@@ -152,24 +136,22 @@ export async function loadFromURL(uri: string): Promise<[number, number]> {
 	let gdt = await res.bytes()
 	let dat = null
 
-	let cty = res.headers.get('Content-Type');
+	let cty = res.headers.get('Content-Type')
 
 	if (cty === 'application/zip') {
 		setLoaderStatus('unzipping')
 		let files = await new Promise((resolve, reject) => {
 			fflate.unzip(gdt, (err, files) => {
-				if (err) reject(err);
-				else resolve(files);
+				if (err) reject(err)
+				else resolve(files)
 			})
 		})
 
 		let filenames = Object.keys(files)
-		if (filenames.length > 1)
-			throw 'Tried to import multiple files at once.'
+		if (filenames.length > 1) throw 'Tried to import multiple files at once.'
 
 		dat = files[filenames[0]]
-	} else
-		dat = gdt
+	} else dat = gdt
 
 	setLoaderStatus('converting_ab')
 	let sab = new SharedArrayBuffer(dat.byteLength)
@@ -187,11 +169,10 @@ export async function loadFromURL(uri: string): Promise<[number, number]> {
 
 /* loading */
 export async function loadFromFile(): Promise<[number, number]> {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	setLoaderStatus('waiting_for_file')
-	let fil = (await openFileDialog('.mid'))
+	let fil = await openFileDialog('.mid')
 	let gdt = fil?.bytes
 	let dat = null
 	if (!gdt) {
@@ -205,18 +186,16 @@ export async function loadFromFile(): Promise<[number, number]> {
 		setLoaderStatus('unzipping')
 		let files = await new Promise((resolve, reject) => {
 			fflate.unzip(gdt, (err, files) => {
-				if (err) reject(err);
-				else resolve(files);
+				if (err) reject(err)
+				else resolve(files)
 			})
 		})
 
 		let filenames = Object.keys(files)
-		if (filenames.length > 1)
-			throw 'Tried to import multiple files at once.'
+		if (filenames.length > 1) throw 'Tried to import multiple files at once.'
 
 		dat = files[filenames[0]]
-	} else
-		dat = gdt
+	} else dat = gdt
 
 	setLoaderStatus('converting_ab')
 	let sab = new SharedArrayBuffer(dat.byteLength)
@@ -233,8 +212,7 @@ export async function loadFromFile(): Promise<[number, number]> {
 }
 
 export function unload(): void {
-	if (!getIsPlayerInitialized())
-		return
+	if (!getIsPlayerInitialized()) return
 
 	let hPlayer = getTPlayer()
 
@@ -243,12 +221,12 @@ export function unload(): void {
 
 /* debug */
 if (DEBUG_MODE) {
-	; (window as any).__tmod_jmidiplayer_play   = play
-	; (window as any).__tmod_jmidiplayer_pause  = pause
-	; (window as any).__tmod_jmidiplayer_stop   = stop
-	; (window as any).__tmod_jmidiplayer_seekTo = seekTo
+	;(window as any).__tmod_jmidiplayer_play = play
+	;(window as any).__tmod_jmidiplayer_pause = pause
+	;(window as any).__tmod_jmidiplayer_stop = stop
+	;(window as any).__tmod_jmidiplayer_seekTo = seekTo
 
-	; (window as any).__tmod_jmidiplayer_loadFromURL  = loadFromURL
-	; (window as any).__tmod_jmidiplayer_loadFromFile = loadFromFile
-	; (window as any).__tmod_jmidiplayer_unload       = unload
+	;(window as any).__tmod_jmidiplayer_loadFromURL = loadFromURL
+	;(window as any).__tmod_jmidiplayer_loadFromFile = loadFromFile
+	;(window as any).__tmod_jmidiplayer_unload = unload
 }

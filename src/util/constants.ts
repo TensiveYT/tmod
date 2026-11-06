@@ -1,9 +1,9 @@
 /* import: settings */
-import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano';
+import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano'
 
-export const DEFAULT_VELOCITY = 0.5;
-export const TIMING_TARGET = 1000;
-export const MIDI_TRANSPOSE = -12;
+export const DEFAULT_VELOCITY = 0.5
+export const TIMING_TARGET = 1000
+export const MIDI_TRANSPOSE = -12
 
 export const MIDI_KEY_NAMES: string[] = (() => {
 	if (!USE_128_KEYS) {
@@ -26,9 +26,7 @@ export const MIDI_KEY_NAMES: string[] = (() => {
 	}
 })()
 
-export const MIDI_NOTE_NUMBERS = new Map(
-    MIDI_KEY_NAMES.map((name, index) => [name, index])
-)
+export const MIDI_NOTE_NUMBERS = new Map(MIDI_KEY_NAMES.map((name, index) => [name, index]))
 
 export const BASIC_PIANO_SCALES: Record<string, string[]> = {
 	'Notes in C Major': ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'],
@@ -54,5 +52,5 @@ export const BASIC_PIANO_SCALES: Record<string, string[]> = {
 	'Notes in F Minor': ['F', 'G', 'A♭', 'B♭', 'C', 'D♭', 'E♭', 'F'],
 	'Notes in F# / Gb Minor': ['G♭', 'A♭', 'A', 'B', 'D♭', 'D', 'E', 'G♭'],
 	'Notes in G Minor': ['G', 'A', 'B♭', 'C', 'D', 'E♭', 'F', 'G'],
-	'Notes in G# / Ab Minor': ['A♭', 'B♭', 'B', 'D♭', 'E♭', 'E', 'G♭', 'A♭'],
-};
+	'Notes in G# / Ab Minor': ['A♭', 'B♭', 'B', 'D♭', 'E♭', 'E', 'G♭', 'A♭']
+}
