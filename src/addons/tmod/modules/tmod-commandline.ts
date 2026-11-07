@@ -248,6 +248,11 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 					let subcommandID = args[1]
 					let subcommand: SubCommand = (command as SubCommandedCommand).subcommands.find(cmd => cmd.id === subcommandID || cmd.aliases.includes(subcommandID))
 
+					if (!subcommand) {
+						sendChat(COMMAND_ERROR_TAG + `Cannot find subcommand \`${subcommandID}\` of \`${commandID}\`.`)
+						return 1
+					}
+
 					return await subcommand.function(...args.slice(1))
 				}
 			} catch (error) {
