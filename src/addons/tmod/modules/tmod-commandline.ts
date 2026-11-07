@@ -3,7 +3,7 @@ import { getClient, state } from '../../../util/state'
 
 /* import: modules */
 import { getTPlayer, load, pause, play, stop, unload } from './tmod-player'
-import { addFromFile, addFromURL, clearPlaylist, getIsPaused, getIsPlaying, getSong, hasSong, loadFile, pausePlaylist, playlist, playPlaylist, remove, resumePlaylist, skipSong, stopPlaylist } from './tmod-playlist'
+import { addFromFile, addFromURL, clearPlaylist, getIsInQuickPlayMode, getIsPaused, getIsPlaying, getSong, hasSong, loadFile, pausePlaylist, playlist, playPlaylist, remove, resumePlaylist, skipSong, stopPlaylist } from './tmod-playlist'
 
 /* import: types */
 import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedCommand } from './tmod-types'
@@ -177,27 +177,50 @@ export const commands: Record<string, Command[]> = {
 				{
 					id: 'toggle',
 					aliases: ['t'],
-					description: 'Toggle playback within the Playlist.',
+					description: 'Toggle playback within the Playlist or MIDI Player.',
 					function: async (...args): Promise<CommandResultCode> => {
-						if (!getIsPaused()) {
-							pausePlaylist()
+						if (!getIsInQuickPlayMode) {
+							if (!getIsPaused()) {
+								pausePlaylist()
 
-							sendChat(COMMAND_SUCCESS_TAG + `Playback paused.`)
-							return 0
+								sendChat(COMMAND_SUCCESS_TAG + `Playback paused.`)
+								return 0
+							} else {
+								resumePlaylist()
+
+								sendChat(COMMAND_SUCCESS_TAG + `Playback resumed.`)
+								return 0
+							}
 						} else {
-							resumePlaylist()
+							let player = getTPlayer()
+							if (player.getCurrentTick() === 0) {
+								sendChat(COMMAND_ERROR_TAG + `No song is currently playing.`)
+								return 1	
+							}
+							if (player.isPlaying) {
+								player.pause()
 
-							sendChat(COMMAND_SUCCESS_TAG + `Playback resumed.`)
-							return 0
+								sendChat(COMMAND_SUCCESS_TAG + `Playback paused.`)
+								return 0
+							} else {
+								player.play()
+
+								sendChat(COMMAND_SUCCESS_TAG + `Playback resumed.`)
+								return 0
+							}
 						}
 					}
 				},
 				{
 					id: 'stop',
 					aliases: ['s'],
-					description: 'Stop playback for the Playlist.',
+					description: 'Stop playback for the Playlist or MIDI Player.',
 					function: async (...args): Promise<CommandResultCode> => {
-						stopPlaylist()
+						let player = getTPlayer()
+						if (!getIsInQuickPlayMode())
+							stopPlaylist()
+						else
+							player.stop()
 
 						sendChat(COMMAND_SUCCESS_TAG + `Playback stopped.`)
 						return 0

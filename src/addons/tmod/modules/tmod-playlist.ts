@@ -35,6 +35,9 @@ export function getIsPlaying(): boolean {
 export function getIsPaused(): boolean {
 	return getIsPlaying() && !getTPlayer().isPlaying
 }
+export function getIsInQuickPlayMode(): boolean {
+	return !getIsPlaying() && getTPlayer().isPlaying
+}
 
 /* initialization */
 export function initTPlaylist(): void {
