@@ -9,7 +9,7 @@ import { PlaylistEntry } from './tmod-types'
 
 /* import: misc */
 import * as logger from './tmod-logger'
-import { sendChat } from './tmod-commandline'
+import { COMMAND_SUCCESS_TAG, sendChat } from './tmod-commandline'
 import { DISABLE_PLAYLIST_CHAT } from '../../../modules/settings/tmod/tmod-playlist'
 
 /* variables */
@@ -117,7 +117,7 @@ export function playPlaylist(filename?: string): void {
 		player.play()
 
 		if (!DISABLE_PLAYLIST_CHAT)
-			sendChat(`Loaded \`${player.totalEvents}\` events in \`${result[1].toFixed(1)}ms\`! | Now playing: \`${playlist[playlistIndex].filename}\``)
+			sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed(1)}ms\`! | Now playing: \`${playlist[playlistIndex].filename}\``)
 		logger.log('MIDIPlaylist', `Now playing: \`${playlist[playlistIndex].filename}\``)
 		
 		playlistIndex = (playlistIndex + 1) % playlist.length
