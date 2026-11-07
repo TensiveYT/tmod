@@ -102,6 +102,7 @@ export const commands: Record<string, Command[]> = {
 					function: async (...args): Promise<CommandResultCode> => {
 						let type = args[1]
 						switch (type) {
+							case 'u':
 							case 'url': {
 								if (!args[2]) {
 									sendChat(COMMAND_ERROR_TAG + `No URL was specified.`)
@@ -112,6 +113,8 @@ export const commands: Record<string, Command[]> = {
 								sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
 								break
 							}
+							case 'f':
+							case 'file':
 							case 'file_dialog': {
 								sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
 								let entry = await addFromFile()
