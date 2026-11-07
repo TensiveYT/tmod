@@ -32,16 +32,38 @@ export const commands: Record<string, Command[]> = {
 						sendChat(COMMAND_SUCCESS_TAG + `Commands within category \`${args[1]}\`: ${category.map(c => `\`${c.id}\``).join(', ')}`)
 						return 0
 					} else {
-						let commandID = args[1]
-						for (let categoryID in commands) {
-							let category = commands[categoryID]
-							let command = category.find(cmd => cmd.id === commandID)
+						if (!args[1].startsWith('!')) {
+							sendChat(COMMAND_ERROR_TAG + `Cannot find command category \`${args[1]}\`.`)
+							return 1
+						} else {
+							let commandID = args[1].slice(1)
+							for (let categoryID in commands) {
+								let category = commands[categoryID]
+								let command = category.find(cmd => cmd.id === commandID || cmd.aliases.includes(commandID))
 
-							if (!command) continue
-							else {
-								sendChat(COMMAND_SUCCESS_TAG + `Command \`${command.id}\` — *${command.description}*`)
-								return 0
+								if (!command) continue
+								else {
+									if (args[2]) {
+										let subcommandID = args[2]
+										let subcommand: SubCommand = (command as SubCommandedCommand).subcommands.find(cmd => cmd.id === subcommandID || cmd.aliases.includes(subcommandID))
+
+										if (!subcommand) {
+											sendChat(COMMAND_ERROR_TAG + `Cannot find subcommand \`${subcommandID}\` of \`${commandID}\`.`)
+											return 1
+										}
+
+										sendChat(COMMAND_SUCCESS_TAG + `Subcommand \`${subcommand.id}\` of \`${command.id}\` — *${command.description}*`)
+										sendChat(COMMAND_SUCCESS_TAG + `Aliases: ${subcommand.aliases.map(a => `\`${a}\``).join(', ')}`)
+										return 0
+									} else {
+										sendChat(COMMAND_SUCCESS_TAG + `Command \`${command.id}\` — *${command.description}*`)
+										sendChat(COMMAND_SUCCESS_TAG + `Aliases: ${command.aliases.map(a => `\`${a}\``).join(', ')}`)
+										return 0
+									}
+								}
 							}
+							sendChat(COMMAND_ERROR_TAG + `Cannot find command \`${args[1]}\`.`)
+							return 1
 						}
 					}
 				}
@@ -187,7 +209,7 @@ export const commands: Record<string, Command[]> = {
 				sendChat(COMMAND_INFO_TAG + `Loading \`${song}\`…`)
 				let result = await loadFile(song)
 						
-				sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
+				sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed(1)}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ` | Now playing: \`${song}\`` : ''))
 				if (ENABLE_AUTO_PLAY_ON_LOAD)
 					play()
 
