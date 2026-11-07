@@ -63,7 +63,7 @@ export async function addFromURL(uri: string): Promise<PlaylistEntry> {
 export async function addFromFile(): Promise<PlaylistEntry> {
 	setLoaderStatus('waiting_for_file')
 
-	let file = await openFileDialog('.mid,.midi.zip')
+	let file = await openFileDialog('.mid,.midi,.zip')
 	if (!file) {
 		setLoaderStatus('idle')
 		return
