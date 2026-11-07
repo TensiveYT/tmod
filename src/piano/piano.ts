@@ -19,6 +19,7 @@ export class PianoKey {
 	timeLoaded: number = 0
 	domElement: HTMLElement | null = null
 	timePlayed: number = 0
+	lastColor : string
 	blips: Denque<{ time: number; color: string }> | Array<{ time: number; color: string }> = USE_DENQUE_BLIP_ARRAY ? new Denque() : []
 	spatial: number = 0
 	rect: { contains: (x: number, y: number) => boolean } | null = null
@@ -96,6 +97,7 @@ export class Piano {
 	}
 
 	play(note: string, vol: number, participant: { id: string; color: string; nameDiv?: HTMLElement }, delay_ms: number, lyric?: string): void {
+
 		if (!Object.hasOwn(this.keys, note) || !participant) return
 
 		let delay = delay_ms || 0

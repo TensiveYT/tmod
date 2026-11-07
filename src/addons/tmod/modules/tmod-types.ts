@@ -1,7 +1,22 @@
 /* command line */
 export type CommandResultCode = 0 | 1
+export type Command = NormalCommand | SubCommandedCommand
 
-export interface Command {
+export interface NormalCommand {
+	id: string
+	aliases: string[]
+	description: string
+	function: (...args: string[]) => Promise<CommandResultCode>
+}
+
+export interface SubCommandedCommand {
+	id: string
+	aliases: string[]
+	description: string
+	subcommands: SubCommand[]
+}
+
+export interface SubCommand {
 	id: string
 	aliases: string[]
 	description: string

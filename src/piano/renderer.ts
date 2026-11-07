@@ -9,7 +9,7 @@ import Denque from '../libs/packages/denque/index'
 
 /* import: hypermod settings */
 import { DISABLE_PIANO_KEY_BOUNCING, DISABLE_PIANO_SHADOWS, DISABLE_UNLOADED_KEY_OPACITY, USE_BLIP_LIMIT, USE_DENQUE_BLIP_ARRAY } from '../modules/settings/tmod/tmod-optimization'
-import { USE_128_KEYS } from '../modules/settings/tmod/tmod-piano'
+import { USE_128_KEYS, USE_BLIPS } from '../modules/settings/tmod/tmod-piano'
 
 export const WHITE_KEY_COUNT = USE_128_KEYS ? 75 : 52
 
@@ -232,7 +232,13 @@ export class CanvasRenderer extends Renderer {
 		}
 	}
 
-	visualize(key: { timePlayed: number; blips: Denque<{ time: number; color: string }> | Array<{ time: number; color: string }>; sharp: boolean }, color: string): void {
+	visualize(key: { timePlayed: number; lastColor: string, blips: Denque<{ time: number; color: string }> | Array<{ time: number; color: string }>; sharp: boolean }, color: string): void {
+		if (!USE_BLIPS) {
+			key.timePlayed = Date.now()
+			key.lastColor  = color
+			return
+		}
+
 		key.timePlayed = Date.now()
 		key.blips.push({ time: key.timePlayed, color })
 		if (USE_BLIP_LIMIT) {
@@ -302,37 +308,59 @@ export class CanvasRenderer extends Renderer {
 					}
 				}
 
-				if (key.blips.length) {
-					const alpha = this.ctx.globalAlpha
-					let w: number, h: number
-					if (key.sharp) {
-						x += this.blackBlipX
-						y = this.blackBlipY
-						w = this.blackBlipWidth
-						h = this.blackBlipHeight
-					} else {
-						x += this.whiteBlipX
-						y = this.whiteBlipY
-						w = this.whiteBlipWidth
-						h = this.whiteBlipHeight
-					}
-					let limit = key.sharp ? this.blackBlipLimit : this.whiteBlipLimit
-					if (key.blips.length > limit) key.blips.splice(0, key.blips.length - limit)
-					for (let b = 0; b < key.blips.length; b++) {
-						const blip = key.blips instanceof Denque ? key.blips.get(b) : key.blips[b]
-						if (blip.time > timeBlipEnd) {
-							let a = alpha - ((now - blip.time) / 1000) * alpha
-							this.ctx.fillStyle =
-								blip.color +
-								Math.floor(a * 255)
-									.toString(16)
-									.padStart(2, '0')
-							this.ctx.fillRect(x, y, w, h)
+				if (USE_BLIPS) {
+					if (key.blips.length) {
+						let alpha = usesAlpha ? this.ctx.globalAlpha : 1.0
+						let w: number, h: number
+						if (key.sharp) {
+							x += this.blackBlipX
+							y = this.blackBlipY
+							w = this.blackBlipWidth
+							h = this.blackBlipHeight
 						} else {
-							key.blips.splice(b, 1)
-							--b
+							x += this.whiteBlipX
+							y = this.whiteBlipY
+							w = this.whiteBlipWidth
+							h = this.whiteBlipHeight
 						}
-						y -= Math.floor(h * 1.1)
+						let limit = key.sharp ? this.blackBlipLimit : this.whiteBlipLimit
+						if (key.blips.length > limit) key.blips.splice(0, key.blips.length - limit)
+						for (let b = 0; b < key.blips.length; b++) {
+							const blip = key.blips instanceof Denque ? key.blips.get(b) : key.blips[b]
+							if (blip.time > timeBlipEnd) {
+								let a = alpha - ((now - blip.time) / 1000) * alpha
+								this.ctx.fillStyle =
+									blip.color +
+									Math.floor(a * 255)
+										.toString(16)
+										.padStart(2, '0')
+								this.ctx.fillRect(x, y, w, h)
+							} else {
+								key.blips.splice(b, 1)
+								--b
+							}
+							y -= Math.floor(h * 1.1)
+						}
+					}
+				} else {
+					if (key.timePlayed > timeBlipEnd) {
+						if (key.sharp) {
+							x += this.blackBlipX
+							y = this.blackKeyHeight * 0.0125
+						} else {
+							x += this.whiteBlipX
+							y = this.whiteKeyHeight * 0.0125
+						}
+						let w: number = !key.sharp ? this.whiteBlipWidth : this.blackBlipWidth, 
+							h: number = !key.sharp ? this.whiteKeyHeight * 0.975 : this.blackKeyHeight * 0.975
+						let alpha = usesAlpha ? this.ctx.globalAlpha : 1.0
+						let a = alpha - ((now - key.timePlayed) / 1000) * alpha
+						this.ctx.fillStyle =
+							key.lastColor +
+							Math.floor(a * 255)
+								.toString(16)
+								.padStart(2, '0')
+						this.ctx.fillRect(x, y, w, h)
 					}
 				}
 			}
