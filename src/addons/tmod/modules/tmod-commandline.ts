@@ -3,7 +3,7 @@ import { getClient, state } from '../../../util/state'
 
 /* import: modules */
 import { getTPlayer, pause, play, stop, unload } from './tmod-player'
-import { addFromFile, addFromURL, getIsPaused, hasSong, loadFile, pausePlaylist, playPlaylist, remove, resumePlaylist, stopPlaylist } from './tmod-playlist'
+import { addFromFile, addFromURL, getIsPaused, hasSong, loadFile, pausePlaylist, playPlaylist, remove, resumePlaylist, skipSong, stopPlaylist } from './tmod-playlist'
 
 /* import: types */
 import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedCommand } from './tmod-types'
@@ -195,9 +195,9 @@ export const commands: Record<string, Command[]> = {
 					aliases: ['sk', 'k'],
 					description: 'Skip the currently playing song within the Playlist.',
 					function: async (...args): Promise<CommandResultCode> => {
-						stopPlaylist()
+						skipSong()
 
-						sendChat(COMMAND_SUCCESS_TAG + `Playback stopped.`)
+						sendChat(COMMAND_SUCCESS_TAG + `Skipped song.`)
 						return 0
 					}
 				}

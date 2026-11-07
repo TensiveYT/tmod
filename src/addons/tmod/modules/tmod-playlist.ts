@@ -161,6 +161,7 @@ export function stopPlaylist(): void {
 	let player = getTPlayer()
 
 	player.stop()
+	player.unload()
 	player.off('endOfFile', playingCallback)
 	playingCallback = undefined
 	playlistIndex = 0
