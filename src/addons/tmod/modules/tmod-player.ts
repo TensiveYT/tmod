@@ -6,7 +6,7 @@ import * as fflate from '../../../libs/packages/fflate/index'
 import { MIDILoaderStatus, PlaylistEntry } from './tmod-types'
 
 /* import: settings */
-import { COLOR_PALETTE } from '../../../modules/settings/tmod/tmod-playback'
+import { COLOR_PALETTE, ENABLE_HOLD_PEDAL } from '../../../modules/settings/tmod/tmod-playback'
 import { DEBUG_MODE } from '../../../modules/settings/tmod/tmod-miscellaneous'
 import { ENABLE_CLIENT_SIDE_PLAYBACK } from '../../../modules/settings/tmod/tmod-optimization'
 import { USE_128_KEYS } from '../../../modules/settings/tmod/tmod-piano'
@@ -57,21 +57,46 @@ export function initTPlayer(): Player {
 	let piano = getPiano()
 	let client = getClient()
 	let noteQuota = getNoteQuota()
+
+	function noteOff(e) {
+		if (ENABLE_HOLD_PEDAL)
+			if (holdPedalEnabled.get(e.channel))
+				return
+
+		if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) 
+			return
+
+		if (!USE_INFINITE_NOTEQUOTA)
+			if (!noteQuota.spend(1))
+				return
+		
+		let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
+		piano.stop(key, { id: client.participantId }, 0)
+		if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+			client.stopNote(key)
+	}
+	function noteOn(e) {
+		if (!USE_INFINITE_NOTEQUOTA)
+			if (!noteQuota.spend(1))
+				return
+
+		let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
+		piano.play(key, e.velocity / 127, { id: client.participantId, color: COLOR_PALETTE[e.channel] }, 0)
+
+		if (ENABLE_HOLD_PEDAL)
+			if (holdPedalEnabled.get(e.channel))
+				holdPedalNotes.get(e.channel).push(key)
+
+		if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+			client.startNote(key, e.velocity / 127)
+	}
+	let holdPedalEnabled: Map<number, boolean> = new Map([[0, false], [1, false], [2, false], [3, false], [4, false], [5, false], [6, false], [7, false], [8, false], [9, false], [10, false], [11, false], [12, false], [13, false], [14, false], [15, false]])
+	let holdPedalNotes  : Map<number, string[]> = new Map([[0, []], [1, []], [2, []], [3, []], [4, []], [5, []], [6, []], [7, []], [8, []], [9, []], [10, []], [11, []], [12, []], [13, []], [14, []], [15, []]])
 	hPlayer.on('midiEvent', e => {
 		switch (e.type) {
 			case 0x08: {
 				// note off
-				if (!USE_128_KEYS && (e.note < 21 || e.note > 108)) 
-					return
-
-				if (!USE_INFINITE_NOTEQUOTA)
-						if (!noteQuota.spend(1))
-							return
-				
-				let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
-				piano.stop(key, { id: client.participantId }, 0)
-				if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
-					client.stopNote(key)
+				noteOff(e)
 				break
 			}
 			case 0x09: {
@@ -80,27 +105,34 @@ export function initTPlayer(): Player {
 					return
 				
 				if (e.velocity === 0) {
-					if (!USE_INFINITE_NOTEQUOTA)
-						if (!noteQuota.spend(1))
-							return
-					
-					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
-					piano.stop(key, { id: client.participantId }, 0)
-
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
-						client.stopNote(key)
+					noteOff(e)
 				} else {
-					if (!USE_INFINITE_NOTEQUOTA)
-						if (!noteQuota.spend(1))
-							return
-
-					let key = !USE_128_KEYS ? MIDI_KEY_NAMES[e.note - 21] : MIDI_KEY_NAMES[e.note]
-					piano.play(key, e.velocity / 127, { id: client.participantId, color: COLOR_PALETTE[e.channel] }, 0)
-
-					if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
-						client.startNote(key, e.velocity / 127)
+					noteOn(e)
 				}
 				break
+			}
+			case 0x0b: {
+				// control change
+				if (ENABLE_HOLD_PEDAL && e.ccNum === 64) {
+					if (e.ccValue >= 64)
+						holdPedalEnabled.set(e.channel, true)
+					else {
+						if (holdPedalEnabled.get(e.channel)) {
+							let notes = holdPedalNotes.get(e.channel)
+
+							for (let note of notes) {
+								if (!USE_INFINITE_NOTEQUOTA)
+									if (!noteQuota.spend(1))
+										return
+								
+								piano.stop(note, { id: client.participantId }, 0)
+								if (!ENABLE_CLIENT_SIDE_PLAYBACK) 
+									client.stopNote(note)
+							}
+						}
+						holdPedalEnabled.set(e.channel, false)
+					}
+				}
 			}
 		}
 	})

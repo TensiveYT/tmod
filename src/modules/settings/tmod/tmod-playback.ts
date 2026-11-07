@@ -17,3 +17,6 @@ export const COLOR_PALETTE = [
     '#9933ff',
     '#e7ff33'
 ]
+
+/* control change */
+export const ENABLE_HOLD_PEDAL = true
