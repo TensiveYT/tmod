@@ -3,7 +3,7 @@ import Player from '../../../libs/packages/jmidiplayer/index'
 import * as fflate from '../../../libs/packages/fflate/index'
 
 /* import: types */
-import { MIDILoaderStatus } from './tmod-types'
+import { MIDILoaderStatus, PlaylistEntry } from './tmod-types'
 
 /* import: settings */
 import { COLOR_PALETTE } from '../../../modules/settings/tmod/tmod-playback'
@@ -114,7 +114,8 @@ export function initTPlayer(): Player {
 
 /* playback */
 export function play(): void {
-	if (!getIsPlayerInitialized()) return
+	if (!getIsPlayerInitialized()) 
+		return
 
 	let hPlayer = getTPlayer()
 
@@ -123,7 +124,8 @@ export function play(): void {
 }
 
 export function pause(): void {
-	if (!getIsPlayerInitialized()) return
+	if (!getIsPlayerInitialized()) 
+		return
 
 	let hPlayer = getTPlayer()
 
@@ -132,7 +134,8 @@ export function pause(): void {
 }
 
 export function stop(): void {
-	if (!getIsPlayerInitialized()) return
+	if (!getIsPlayerInitialized()) 
+		return
 
 	let hPlayer = getTPlayer()
 
@@ -141,7 +144,8 @@ export function stop(): void {
 }
 
 export function seekTo(tick: number): void {
-	if (!getIsPlayerInitialized()) return
+	if (!getIsPlayerInitialized()) 
+		return
 
 	let hPlayer = getTPlayer()
 
@@ -150,64 +154,13 @@ export function seekTo(tick: number): void {
 }
 
 /* loading */
-export async function loadFromURL(uri: string): Promise<[number, number]> {
+export async function load(entry: PlaylistEntry): Promise<[number, number]> {
 	if (!getIsPlayerInitialized()) return
 
-	setLoaderStatus('fetching')
-	let url = new URL(uri)
-	let pro = fetch(url)
+	let gdt: Uint8Array = entry.bytes
+	let dat: Uint8Array
 
-	let res = await pro
-	let gdt = await res.bytes()
-	let dat = null
-
-	let cty = res.headers.get('Content-Type')
-
-	if (cty === 'application/zip') {
-		setLoaderStatus('unzipping')
-		let files = await new Promise((resolve, reject) => {
-			fflate.unzip(gdt, (err, files) => {
-				if (err) reject(err)
-				else resolve(files)
-			})
-		})
-
-		let filenames = Object.keys(files)
-		if (filenames.length > 1) throw 'Tried to import multiple files at once.'
-
-		dat = files[filenames[0]]
-	} else dat = gdt
-
-	setLoaderStatus('converting_ab')
-	let sab = new SharedArrayBuffer(dat.byteLength)
-	let isb = new Uint8Array(sab)
-
-	let hPlayer = getTPlayer()
-	isb.set(dat)
-
-	setLoaderStatus('loading')
-	let result = await hPlayer.loadArrayBuffer(isb.buffer)
-
-	setLoaderStatus('idle')
-	return result
-}
-
-/* loading */
-export async function loadFromFile(): Promise<[number, number]> {
-	if (!getIsPlayerInitialized()) return
-
-	setLoaderStatus('waiting_for_file')
-	let fil = await openFileDialog('.mid')
-	let gdt = fil?.bytes
-	let dat = null
-	if (!gdt) {
-		setLoaderStatus('idle')
-		return
-	}
-
-	let cty = fil.type
-
-	if (cty === 'application/zip') {
+	if (entry.type === 'application/zip') {
 		setLoaderStatus('unzipping')
 		let files = await new Promise((resolve, reject) => {
 			fflate.unzip(gdt, (err, files) => {
@@ -250,8 +203,5 @@ if (DEBUG_MODE) {
 	;(window as any).__tmod_jmidiplayer_pause = pause
 	;(window as any).__tmod_jmidiplayer_stop = stop
 	;(window as any).__tmod_jmidiplayer_seekTo = seekTo
-
-	;(window as any).__tmod_jmidiplayer_loadFromURL = loadFromURL
-	;(window as any).__tmod_jmidiplayer_loadFromFile = loadFromFile
 	;(window as any).__tmod_jmidiplayer_unload = unload
 }

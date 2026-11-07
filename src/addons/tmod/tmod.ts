@@ -1,6 +1,7 @@
 /* import: modules */
 import { initTCommandLine } from './modules/tmod-commandline'
-import { initTPlayer } from './modules/tmod-jmidiplayer'
+import { initTPlayer } from './modules/tmod-player'
+import { initTPlaylist } from './modules/tmod-playlist'
 
 /* variables */
 export const VERSION = 'v0.2.2-alpha'
@@ -21,5 +22,6 @@ export function initTMod(): void {
 
 	// init modules
 	initTPlayer()
+	initTPlaylist()
 	initTCommandLine()
 }

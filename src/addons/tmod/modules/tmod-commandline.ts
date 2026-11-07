@@ -2,7 +2,8 @@
 import { getClient, state } from '../../../util/state'
 
 /* import: modules */
-import { getTPlayer, loadFromFile, loadFromURL, pause, play, stop, unload } from './tmod-jmidiplayer'
+import { getTPlayer, pause, play, stop, unload } from './tmod-player'
+import { addFromFile, addFromURL, hasSong, loadFile, remove } from './tmod-playlist'
 
 /* import: types */
 import { Command, CommandResultCode } from './tmod-types'
@@ -10,6 +11,7 @@ import { Command, CommandResultCode } from './tmod-types'
 /* import: constants */
 import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
 import { ENABLE_AUTO_PLAY_ON_LOAD } from '../../../modules/settings/tmod/tmod-playlist'
+
 
 /* commands */
 export const COMMAND_PREFIX = '!'
@@ -60,7 +62,7 @@ export const commands: Record<string, Command[]> = {
 			}
 		}
 	],
-	playback: [
+	playlist: [
 		{
 			id: 'play',
 			description: 'Play the currently loaded MIDI.',
@@ -89,35 +91,27 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
-			id: 'load',
-			description: 'Load a MIDI.',
+			id: 'add',
+			description: 'Add a MIDI to the Playlist.',
 			function: async (...args): Promise<CommandResultCode> => {
 				let type = args[1]
-
-				let player = getTPlayer()
 				switch (type) {
 					case 'url': {
 						if (!args[2]) {
-							sendChat(`❌ | No URL was specified.`)
+							sendChat(COMMAND_ERROR_TAG + `No URL was specified.`)
 							return 1
 						}
-
-						sendChat(COMMAND_INFO_TAG + 'Loading…')
-						let result = await loadFromURL(args[2])
+						let entry = await addFromURL(args[2])
 						
-						sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
-						if (ENABLE_AUTO_PLAY_ON_LOAD)
-							play()
+						sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
 						break
 					}
 					case 'file_dialog': {
 						sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
-						let result = await loadFromFile()
-
-						if (result) {
-							sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
-							if (ENABLE_AUTO_PLAY_ON_LOAD)
-								play()
+						let entry = await addFromFile()
+						
+						if (entry) {
+							sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
 						} else 
 							sendChat(COMMAND_INFO_TAG + `No file was chosen.`)
 						break
@@ -127,11 +121,52 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
+			id: 'remove',
+			description: 'Remove a MIDI from the Playlist.',
+			function: async (...args): Promise<CommandResultCode> => {
+				let song = args.slice(1).join(' ')
+
+				if (!hasSong(song)) {
+					sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
+					return 1
+				}
+
+				remove(song)
+				sendChat(COMMAND_SUCCESS_TAG + `Removed song \`${song}\` from the playlist.`)
+
+				return 0
+			}
+		},
+		{
+			id: 'load',
+			description: 'Load a MIDI from the Playlist.',
+			function: async (...args): Promise<CommandResultCode> => {
+				let song = args.slice(1).join(' ')
+
+				let player = getTPlayer()
+
+				if (!hasSong(song)) {
+					sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
+					return 1
+				}
+
+				sendChat(COMMAND_INFO_TAG + `Loading \`${song}\`…`)
+				let result = await loadFile(song)
+						
+				sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed()}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ' The MIDI will now play.' : ''))
+				if (ENABLE_AUTO_PLAY_ON_LOAD)
+					play()
+
+				return 0
+			}
+		},
+		{
 			id: 'unload',
-			description: 'Unload a MIDI.',
+			description: 'Unload the currently loaded MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				unload()
 				sendChat(COMMAND_SUCCESS_TAG + 'Unloaded the currently loaded MIDI.')
+
 				return 0
 			}
 		}

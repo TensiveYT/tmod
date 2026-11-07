@@ -7,5 +7,12 @@ export interface Command {
 	function: (...args: string[]) => Promise<CommandResultCode>
 }
 
-/* jmidiplayer */
+/* MIDI player */
 export type MIDILoaderStatus = 'idle' | 'waiting_for_file' | 'fetching' | 'unzipping' | 'converting_ab' | 'loading'
+
+/* MIDI playlist */
+export interface PlaylistEntry {
+	filename: string
+	type: string
+	bytes: Uint8Array
+}
