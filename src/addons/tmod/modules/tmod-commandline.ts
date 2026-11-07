@@ -189,43 +189,19 @@ export const commands: Record<string, Command[]> = {
 						sendChat(COMMAND_SUCCESS_TAG + `Playback stopped.`)
 						return 0
 					}
+				},
+				{
+					id: 'skip',
+					aliases: ['sk', 'k'],
+					description: 'Skip the currently playing song within the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						stopPlaylist()
+
+						sendChat(COMMAND_SUCCESS_TAG + `Playback stopped.`)
+						return 0
+					}
 				}
 			]
-		},
-		{
-			id: 'load',
-			aliases: ['l'],
-			description: 'Load a MIDI from the Playlist.',
-			function: async (...args): Promise<CommandResultCode> => {
-				let song = args.slice(1).join(' ')
-
-				let player = getTPlayer()
-
-				if (!hasSong(song)) {
-					sendChat(COMMAND_ERROR_TAG + `There is no song in the Playlist named \`${song}\`.`)
-					return 1
-				}
-
-				sendChat(COMMAND_INFO_TAG + `Loading \`${song}\`…`)
-				let result = await loadFile(song)
-						
-				sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed(1)}ms\`!` + (ENABLE_AUTO_PLAY_ON_LOAD ? ` | Now playing: \`${song}\`` : ''))
-				if (ENABLE_AUTO_PLAY_ON_LOAD)
-					play()
-
-				return 0
-			}
-		},
-		{
-			id: 'unload',
-			aliases: ['u'],
-			description: 'Unload the currently loaded MIDI.',
-			function: async (): Promise<CommandResultCode> => {
-				unload()
-				sendChat(COMMAND_SUCCESS_TAG + 'Unloaded the currently loaded MIDI.')
-
-				return 0
-			}
 		}
 	]
 }

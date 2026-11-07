@@ -113,6 +113,8 @@ export function playPlaylist(filename?: string): void {
 	let player = getTPlayer()
 
 	playingCallback = async() => {
+		player.unload()
+
 		let result = await loadFileFromIndex(playlistIndex)
 		player.play()
 
@@ -164,4 +166,15 @@ export function stopPlaylist(): void {
 	playlistIndex = 0
 
 	logger.log('MIDIPlaylist', 'Playback stopped.')
+}
+export function skipSong(): void {
+	if (!playingCallback)
+		throw new Error('Cannot skip a song in the Playlist while nothing is playing.')
+
+	let player = getTPlayer()
+
+	player.stop()
+
+	logger.log('MIDIPlaylist', 'Song skipped.')
+	playingCallback()
 }
