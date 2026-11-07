@@ -6,7 +6,7 @@ import { getTPlayer, pause, play, stop, unload } from './tmod-player'
 import { addFromFile, addFromURL, hasSong, loadFile, remove } from './tmod-playlist'
 
 /* import: types */
-import { Command, CommandResultCode } from './tmod-types'
+import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedCommand } from './tmod-types'
 
 /* import: constants */
 import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
@@ -76,8 +76,8 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
-			aliases: ['t'],
 			id: 'pause',
+			aliases: ['t'],
 			description: 'Pause the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				pause()
@@ -86,8 +86,8 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
-			aliases: ['s'],
 			id: 'stop',
+			aliases: ['s'],
 			description: 'Stop the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				stop()
@@ -96,53 +96,63 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
-			id: 'add',
-			aliases: ['a'],
-			description: 'Add a MIDI to the Playlist.',
-			function: async (...args): Promise<CommandResultCode> => {
-				let type = args[1]
-				switch (type) {
-					case 'url': {
-						if (!args[2]) {
-							sendChat(COMMAND_ERROR_TAG + `No URL was specified.`)
+			id: 'playlist',
+			aliases: ['y'],
+			description: 'Modify the Playlist.',
+			subcommands: [
+				{
+					id: 'add',
+					aliases: ['a'],
+					description: 'Add a MIDI to the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						let type = args[1]
+						switch (type) {
+							case 'url': {
+								if (!args[2]) {
+									sendChat(COMMAND_ERROR_TAG + `No URL was specified.`)
+									return 1
+								}
+								let entry = await addFromURL(args[2])
+								
+								sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
+								break
+							}
+							case 'file_dialog': {
+								sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
+								let entry = await addFromFile()
+								
+								if (entry) {
+									sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
+								} else 
+									sendChat(COMMAND_INFO_TAG + `No file was chosen.`)
+								break
+							}
+							default:
+								sendChat(COMMAND_ERROR_TAG + 'You need to specify the way you want to add the file.')
+								return 1
+						}
+						return 0
+					}
+				},
+				{
+					id: 'remove',
+					aliases: ['r'],
+					description: 'Remove a MIDI from the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						let song = args.slice(1).join(' ')
+
+						if (!hasSong(song)) {
+							sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
 							return 1
 						}
-						let entry = await addFromURL(args[2])
-						
-						sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
-						break
+
+						remove(song)
+						sendChat(COMMAND_SUCCESS_TAG + `Removed song \`${song}\` from the playlist.`)
+
+						return 0
 					}
-					case 'file_dialog': {
-						sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
-						let entry = await addFromFile()
-						
-						if (entry) {
-							sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
-						} else 
-							sendChat(COMMAND_INFO_TAG + `No file was chosen.`)
-						break
-					}
-				}
-				return 0
-			}
-		},
-		{
-			id: 'remove',
-			aliases: ['r'],
-			description: 'Remove a MIDI from the Playlist.',
-			function: async (...args): Promise<CommandResultCode> => {
-				let song = args.slice(1).join(' ')
-
-				if (!hasSong(song)) {
-					sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
-					return 1
-				}
-
-				remove(song)
-				sendChat(COMMAND_SUCCESS_TAG + `Removed song \`${song}\` from the playlist.`)
-
-				return 0
-			}
+				},
+			]
 		},
 		{
 			id: 'load',
@@ -215,7 +225,14 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 		if (!command) continue
 		else
 			try {
-				return await command.function(...args)
+				if (!(command as any).subcommands)
+					return await (command as NormalCommand).function(...args)
+				else {
+					let subcommandID = args[1]
+					let subcommand: SubCommand = (command as SubCommandedCommand).subcommands.find(cmd => cmd.id === subcommandID || cmd.aliases.includes(subcommandID))
+
+					return await subcommand.function(...args.slice(1))
+				}
 			} catch (error) {
 				sendChat(COMMAND_ERROR_TAG + `${error.message}`)
 				console.error(error)
