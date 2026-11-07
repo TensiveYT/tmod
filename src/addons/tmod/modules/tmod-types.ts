@@ -3,6 +3,7 @@ export type CommandResultCode = 0 | 1
 
 export interface Command {
 	id: string
+	aliases: string[]
 	description: string
 	function: (...args: string[]) => Promise<CommandResultCode>
 }

@@ -19,6 +19,7 @@ export const commands: Record<string, Command[]> = {
 	general: [
 		{
 			id: 'help',
+			aliases: ['h'],
 			description: 'Shows information about commands within the T-Mod Command Line.',
 			function: async (...args): Promise<CommandResultCode> => {
 				if (args.length === 1) {
@@ -48,6 +49,7 @@ export const commands: Record<string, Command[]> = {
 		},
 		{
 			id: 'js',
+			aliases: ['j'],
 			description: 'Shows information about commands within the T-Mod Command Line.',
 			function: async (...args): Promise<CommandResultCode> => {
 				let input = args.slice(1).join(' ')
@@ -65,6 +67,7 @@ export const commands: Record<string, Command[]> = {
 	playlist: [
 		{
 			id: 'play',
+			aliases: ['p'],
 			description: 'Play the currently loaded MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				play()
@@ -73,6 +76,7 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
+			aliases: ['t'],
 			id: 'pause',
 			description: 'Pause the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
@@ -82,6 +86,7 @@ export const commands: Record<string, Command[]> = {
 			}
 		},
 		{
+			aliases: ['s'],
 			id: 'stop',
 			description: 'Stop the currently playing MIDI.',
 			function: async (): Promise<CommandResultCode> => {
@@ -92,6 +97,7 @@ export const commands: Record<string, Command[]> = {
 		},
 		{
 			id: 'add',
+			aliases: ['a'],
 			description: 'Add a MIDI to the Playlist.',
 			function: async (...args): Promise<CommandResultCode> => {
 				let type = args[1]
@@ -122,6 +128,7 @@ export const commands: Record<string, Command[]> = {
 		},
 		{
 			id: 'remove',
+			aliases: ['r'],
 			description: 'Remove a MIDI from the Playlist.',
 			function: async (...args): Promise<CommandResultCode> => {
 				let song = args.slice(1).join(' ')
@@ -139,6 +146,7 @@ export const commands: Record<string, Command[]> = {
 		},
 		{
 			id: 'load',
+			aliases: ['l'],
 			description: 'Load a MIDI from the Playlist.',
 			function: async (...args): Promise<CommandResultCode> => {
 				let song = args.slice(1).join(' ')
@@ -162,6 +170,7 @@ export const commands: Record<string, Command[]> = {
 		},
 		{
 			id: 'unload',
+			aliases: ['u'],
 			description: 'Unload the currently loaded MIDI.',
 			function: async (): Promise<CommandResultCode> => {
 				unload()
@@ -201,7 +210,7 @@ export async function runCommand(command: string): Promise<CommandResultCode> {
 
 	for (let categoryID in commands) {
 		let category = commands[categoryID]
-		let command = category.find(cmd => cmd.id === commandID)
+		let command = category.find(cmd => cmd.id === commandID || cmd.aliases.includes(commandID))
 
 		if (!command) continue
 		else
