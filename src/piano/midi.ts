@@ -112,7 +112,8 @@ export function initMidi(): void {
 
 							if (DISABLE_MIDI_OUTPUT) return
 
-							let timestamp = performance.now() + delay_ms
+							if (delay_ms > 0)
+								var timestamp = performance.now() + delay_ms
 
 							let note_number = MIDI_NOTE_NUMBERS.get(note_name)
 							if (note_number === undefined) return
@@ -122,7 +123,10 @@ export function initMidi(): void {
 							for (let i = 0; i < outs.length; i++) {
 								let output = outs[i]
 								if (!output.enabled) continue
-								output.port.send([0x90, nn, vel * output.volume], timestamp)
+								if (delay_ms > 0)
+									output.port.send([0x90, nn, vel * output.volume], timestamp)
+								else
+									output.port.send([0x90, nn, vel * output.volume])
 							}
 						}
 					}
