@@ -2,8 +2,8 @@
 import { getClient, state } from '../../../util/state'
 
 /* import: modules */
-import { getTPlayer, pause, play, stop, unload } from './tmod-player'
-import { addFromFile, addFromURL, getIsPaused, hasSong, loadFile, pausePlaylist, playPlaylist, remove, resumePlaylist, skipSong, stopPlaylist } from './tmod-playlist'
+import { getTPlayer, load, pause, play, stop, unload } from './tmod-player'
+import { addFromFile, addFromURL, clearPlaylist, getIsPaused, getIsPlaying, getSong, hasSong, loadFile, pausePlaylist, playlist, playPlaylist, remove, resumePlaylist, skipSong, stopPlaylist } from './tmod-playlist'
 
 /* import: types */
 import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedCommand } from './tmod-types'
@@ -12,6 +12,9 @@ import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedComm
 import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
 import { DISABLE_PLAYLIST_CHAT, ENABLE_AUTO_PLAY_ON_LOAD } from '../../../modules/settings/tmod/tmod-playlist'
 
+/* import: misc */
+import * as logger from './tmod-logger'
+import { timeFormat } from '../../../util/util'
 
 /* commands */
 export const COMMAND_PREFIX = '!'
@@ -95,7 +98,7 @@ export const commands: Record<string, Command[]> = {
 				{
 					id: 'add',
 					aliases: ['a'],
-					description: 'Add a MIDI to the Playlist.',
+					description: 'Add the specified MIDI to the Playlist.',
 					function: async (...args): Promise<CommandResultCode> => {
 						let type = args[1]
 						switch (type) {
@@ -129,17 +132,24 @@ export const commands: Record<string, Command[]> = {
 				{
 					id: 'remove',
 					aliases: ['r'],
-					description: 'Remove a MIDI from the Playlist.',
+					description: 'Remove the specified MIDI from the Playlist.',
 					function: async (...args): Promise<CommandResultCode> => {
-						let song = args.slice(1).join(' ')
+						let name = args.slice(1).join(' ').trim()
+						
+						let song = getSong(name)
 
-						if (!hasSong(song)) {
-							sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
+						if (!name) {
+							sendChat(COMMAND_ERROR_TAG + `Please specify a song to remove. Use \`!playlist view\` to see available songs.`)
 							return 1
 						}
 
-						remove(song)
-						sendChat(COMMAND_SUCCESS_TAG + `Removed song \`${song}\` from the playlist.`)
+						if (!song) {
+							sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${name}\`.`)
+							return 1
+						}
+
+						remove(song.filename)
+						sendChat(COMMAND_SUCCESS_TAG + `Removed song \`${song.filename}\` from the playlist.`)
 
 						return 0
 					}
@@ -198,6 +208,70 @@ export const commands: Record<string, Command[]> = {
 						skipSong()
 
 						sendChat(COMMAND_SUCCESS_TAG + `Skipped song.`)
+						return 0
+					}
+				},
+				{
+					id: 'view',
+					aliases: ['v'],
+					description: 'View all songs within the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						if (playlist.length <= 0) {
+							sendChat(COMMAND_ERROR_TAG + 'There are no songs within the Playlist.')
+							return 1
+						}
+
+						let songs = playlist.map((p, i) => `${i}: ${p.filename}`)
+						sendChat(COMMAND_SUCCESS_TAG + songs.join(' | '))
+						return 0
+					}
+				},
+				{
+					id: 'clear',
+					aliases: ['c', 'cl', 'removeall'],
+					description: 'Remove all songs within the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						if (playlist.length <= 0) {
+							sendChat(COMMAND_ERROR_TAG + 'There are no songs within the Playlist.')
+							return 1
+						}
+
+						clearPlaylist()
+						sendChat(COMMAND_SUCCESS_TAG + 'Removed all songs within the Playlist.')
+						return 0
+					}
+				},
+				{
+					id: 'quickplay',
+					aliases: ['l', 'q', 'load', 'quick'],
+					description: 'Stop the playlist, and immediately load & play the specified MIDI.',
+					function: async (...args): Promise<CommandResultCode> => {
+						let name = args.slice(1).join(' ').trim()
+
+						let player = getTPlayer()
+						let song = getSong(name)
+
+						if (!name) {
+							sendChat(COMMAND_ERROR_TAG + `Please specify a song to play. Use \`!playlist view\` to see available songs.`)
+							return 1
+						}
+
+						if (!song) {
+							sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${name}\`.`)
+							return 1
+						}
+						
+						if (getIsPlaying())
+							stopPlaylist()
+						
+						let result = await load(song)
+
+						if (!DISABLE_PLAYLIST_CHAT)
+							sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${timeFormat(result[1])}\`! | Now playing: \`${song.filename}\``)
+						
+						logger.log('MIDIPlaylist', `Now playing: \`${song.filename}\``)
+						player.play()
+
 						return 0
 					}
 				}

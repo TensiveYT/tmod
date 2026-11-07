@@ -21,6 +21,10 @@ export const LOOP_PLAYLIST = true
 export let   playlistIndex  :       number = 0
 export let   playingCallback: () => void
 
+export function getSong(filename: string): PlaylistEntry {
+	return playlist.find(entry => entry.filename === filename || entry.filename.split('.').slice(0, -1).join('.') === filename)
+}
+
 /* checks */
 export function hasSong(filename: string): boolean {
 	return playlist.find(entry => entry.filename === filename || entry.filename.split('.').slice(0, -1).join('.') === filename) !== undefined
@@ -78,6 +82,9 @@ export function remove(filename: string): void {
 	if (index === -1)
 		throw new Error(`There is no song in the playlist named \`${filename}\`.`)
 	playlist.splice(index, 1)
+}
+export function clearPlaylist(): void {
+	playlist.length = 0
 }
 
 /* MIDI loading */
