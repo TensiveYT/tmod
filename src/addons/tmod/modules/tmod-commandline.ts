@@ -3,14 +3,14 @@ import { getClient, state } from '../../../util/state'
 
 /* import: modules */
 import { getTPlayer, pause, play, stop, unload } from './tmod-player'
-import { addFromFile, addFromURL, hasSong, loadFile, remove } from './tmod-playlist'
+import { addFromFile, addFromURL, getIsPaused, hasSong, loadFile, pausePlaylist, playPlaylist, remove, resumePlaylist, stopPlaylist } from './tmod-playlist'
 
 /* import: types */
 import { Command, CommandResultCode, NormalCommand, SubCommand, SubCommandedCommand } from './tmod-types'
 
 /* import: constants */
 import { ENABLE_CLIENT_SIDE_COMMAND_LINE } from '../../../modules/settings/tmod/tmod-chat'
-import { ENABLE_AUTO_PLAY_ON_LOAD } from '../../../modules/settings/tmod/tmod-playlist'
+import { DISABLE_PLAYLIST_CHAT, ENABLE_AUTO_PLAY_ON_LOAD } from '../../../modules/settings/tmod/tmod-playlist'
 
 
 /* commands */
@@ -66,38 +66,8 @@ export const commands: Record<string, Command[]> = {
 	],
 	playlist: [
 		{
-			id: 'play',
-			aliases: ['p'],
-			description: 'Play the currently loaded MIDI.',
-			function: async (): Promise<CommandResultCode> => {
-				play()
-				sendChat(COMMAND_SUCCESS_TAG + 'Playing the currently loaded MIDI.')
-				return 0
-			}
-		},
-		{
-			id: 'pause',
-			aliases: ['t'],
-			description: 'Pause the currently playing MIDI.',
-			function: async (): Promise<CommandResultCode> => {
-				pause()
-				sendChat(COMMAND_SUCCESS_TAG + 'The currently playing MIDI has been paused.')
-				return 0
-			}
-		},
-		{
-			id: 'stop',
-			aliases: ['s'],
-			description: 'Stop the currently playing MIDI.',
-			function: async (): Promise<CommandResultCode> => {
-				stop()
-				sendChat(COMMAND_SUCCESS_TAG + 'The currently playing MIDI has been stopped.')
-				return 0
-			}
-		},
-		{
 			id: 'playlist',
-			aliases: ['y'],
+			aliases: ['pl'],
 			description: 'Modify the Playlist.',
 			subcommands: [
 				{
@@ -152,6 +122,52 @@ export const commands: Record<string, Command[]> = {
 						return 0
 					}
 				},
+				{
+					id: 'play',
+					aliases: ['p'],
+					description: 'Begin playback for the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						if (args.length === 0) {
+							playPlaylist()
+							sendChat(COMMAND_SUCCESS_TAG + `Begun playback.`)
+							return 0
+						} else {
+							let song = args.slice(1).join(' ')
+
+							playPlaylist(song)
+							return 0
+						}
+					}
+				},
+				{
+					id: 'toggle',
+					aliases: ['t'],
+					description: 'Toggle playback within the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						if (!getIsPaused()) {
+							pausePlaylist()
+
+							sendChat(COMMAND_SUCCESS_TAG + `Playback paused.`)
+							return 0
+						} else {
+							resumePlaylist()
+
+							sendChat(COMMAND_SUCCESS_TAG + `Playback resumed.`)
+							return 0
+						}
+					}
+				},
+				{
+					id: 'stop',
+					aliases: ['s'],
+					description: 'Stop playback for the Playlist.',
+					function: async (...args): Promise<CommandResultCode> => {
+						stopPlaylist()
+
+						sendChat(COMMAND_SUCCESS_TAG + `Playback stopped.`)
+						return 0
+					}
+				}
 			]
 		},
 		{
@@ -164,7 +180,7 @@ export const commands: Record<string, Command[]> = {
 				let player = getTPlayer()
 
 				if (!hasSong(song)) {
-					sendChat(COMMAND_ERROR_TAG + `There is no song in the playlist named \`${song}\`.`)
+					sendChat(COMMAND_ERROR_TAG + `There is no song in the Playlist named \`${song}\`.`)
 					return 1
 				}
 
@@ -208,7 +224,8 @@ export function initTCommandLine(): void {
 	})
 
 	player.on('endOfFile', () => {
-		sendChat(COMMAND_SUCCESS_TAG + 'Playback finished!')
+		if (!DISABLE_PLAYLIST_CHAT)
+			sendChat(COMMAND_SUCCESS_TAG + 'Playback finished!')
 	})
 }
 
