@@ -221,7 +221,7 @@ export const commands: Record<string, Command[]> = {
 							return 1
 						}
 
-						let songs = playlist.map((p, i) => `${i}: ${p.filename}`)
+						let songs = playlist.map((p, i) => `${i}: \`${p.filename}\``)
 						sendChat(COMMAND_SUCCESS_TAG + songs.join(' | '))
 						return 0
 					}
