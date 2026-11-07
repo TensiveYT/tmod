@@ -1,5 +1,5 @@
 /* import: utilities */
-import { openFileDialog } from '../../../util/util'
+import { openFileDialog, timeFormat } from '../../../util/util'
 
 /* import: modules */
 import { getTPlayer, load, pause, play, setLoaderStatus, stop, unload } from './tmod-player'
@@ -119,7 +119,7 @@ export function playPlaylist(filename?: string): void {
 		player.play()
 
 		if (!DISABLE_PLAYLIST_CHAT)
-			sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${result[1].toFixed(1)}ms\`! | Now playing: \`${playlist[playlistIndex].filename}\``)
+			sendChat(COMMAND_SUCCESS_TAG + `Loaded \`${player.totalEvents.toLocaleString()}\` events in \`${timeFormat(result[1])}\`! | Now playing: \`${playlist[playlistIndex].filename}\``)
 		logger.log('MIDIPlaylist', `Now playing: \`${playlist[playlistIndex].filename}\``)
 		
 		playlistIndex = (playlistIndex + 1) % playlist.length

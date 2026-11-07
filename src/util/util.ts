@@ -386,6 +386,15 @@ export function openFileDialog(accept = '*/*'): Promise<{ name: string; type: st
 	})
 }
 
+export function timeFormat(input: number) {
+	if (input < 1)
+		return (input * 1000).toFixed(1) + 'μs'
+	else if (input >= 1000)
+		return (input / 1000).toFixed(2) + 's'
+	else
+		return input.toFixed(1) + 'ms'
+}
+
 export const parseContent = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
 
 const markdownRegex = /((?:\\|)(?:\|\|.+?\|\||```.+?```|``.+?``|`.+?`|\*\*\*.+?\*\*\*|\*\*.+?\*\*|\*.+?\*|___.+?___|__.+?__|_.+?_(?:\s|$)|~~.+?~~))/g
