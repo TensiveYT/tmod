@@ -4,7 +4,7 @@ import { initTPlayer } from './modules/tmod-player'
 import { initTPlaylist } from './modules/tmod-playlist'
 
 /* variables */
-export const VERSION = 'v0.3.1-alpha.1'
+export const VERSION = 'v0.3.2-alpha.0'
 
 /* screen elements */
 export const tmodContainer = document.createElement('tmod-container')
