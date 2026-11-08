@@ -15,7 +15,6 @@ import { MIDI_KEY_NAMES } from '../../../util/constants'
 
 /* import: misc */
 import { getClient, getNoteQuota, getPiano, state } from '../../../util/state'
-import { openFileDialog } from '../../../util/util'
 import * as logger from './tmod-logger'
 import { USE_INFINITE_NOTEQUOTA } from '../../../modules/settings/tmod/tmod-notes'
 
