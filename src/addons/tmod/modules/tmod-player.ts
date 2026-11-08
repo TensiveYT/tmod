@@ -1,9 +1,8 @@
 /* import: packages */
 import Player from '../../../libs/packages/jmidiplayer/index'
-import * as fflate from '../../../libs/packages/fflate/index'
 
 /* import: types */
-import { MIDILoaderStatus, PlaylistEntry } from './tmod-types'
+import { PlaylistEntry } from './tmod-types'
 
 /* import: settings */
 import { COLOR_PALETTE, ENABLE_HOLD_PEDAL } from '../../../modules/settings/tmod/tmod-playback'
@@ -28,25 +27,6 @@ export function getIsPlayerInitialized(): boolean {
 /* variables */
 export function getTPlayer(): Player {
 	return state.addons.tmod.player
-}
-
-/* status */
-export const STATUS_MESSAGES: Record<MIDILoaderStatus, string> = {
-	idle: 'Now idle.',
-	waiting_for_file: 'Waiting for MIDI file…',
-	fetching: 'Fetching MIDI…',
-	unzipping: 'Unzipping MIDI…',
-	converting_ab: 'Converting MIDI’s ArrayBuffer into a TypedArray…',
-	loading: 'Loading MIDI…'
-}
-export var loaderStatus: MIDILoaderStatus = 'idle'
-export function setLoaderStatus(status: MIDILoaderStatus) {
-	loaderStatus = status
-
-	let message = STATUS_MESSAGES[loaderStatus]
-	if (!message) throw new Error('Loader set to an invalid status.')
-
-	logger.log('MIDILoader', message)
 }
 
 /* initialization */
@@ -189,35 +169,16 @@ export function seekTo(tick: number): void {
 export async function load(entry: PlaylistEntry): Promise<[number, number]> {
 	if (!getIsPlayerInitialized()) return
 
-	let gdt: Uint8Array = entry.bytes
-	let dat: Uint8Array
+	let dat: Uint8Array = entry.bytes
 
-	if (entry.type === 'application/zip') {
-		setLoaderStatus('unzipping')
-		let files = await new Promise((resolve, reject) => {
-			fflate.unzip(gdt, (err, files) => {
-				if (err) reject(err)
-				else resolve(files)
-			})
-		})
-
-		let filenames = Object.keys(files)
-		if (filenames.length > 1) throw 'Tried to import multiple files at once.'
-
-		dat = files[filenames[0]]
-	} else dat = gdt
-
-	setLoaderStatus('converting_ab')
 	let sab = new SharedArrayBuffer(dat.byteLength)
 	let isb = new Uint8Array(sab)
 
 	let hPlayer = getTPlayer()
 	isb.set(dat)
 
-	setLoaderStatus('loading')
 	let result = await hPlayer.loadArrayBuffer(isb.buffer)
 
-	setLoaderStatus('idle')
 	return result
 }
 

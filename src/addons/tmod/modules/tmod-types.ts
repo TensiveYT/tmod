@@ -23,12 +23,11 @@ export interface SubCommand {
 	function: (...args: string[]) => Promise<CommandResultCode>
 }
 
-/* MIDI player */
-export type MIDILoaderStatus = 'idle' | 'waiting_for_file' | 'fetching' | 'unzipping' | 'converting_ab' | 'loading'
-
 /* MIDI playlist */
+export type MIDIAddingState = 'waiting_for_file' | 'fetching' | 'unzipping'
 export interface PlaylistEntry {
 	filename: string
-	type: string
 	bytes: Uint8Array
+	adding?: true
+	adding_state?: MIDIAddingState
 }

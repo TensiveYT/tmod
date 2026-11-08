@@ -1,8 +1,11 @@
+/* import: packages */
+import * as fflate from '../../../libs/packages/fflate/index'
+
 /* import: utilities */
 import { openFileDialog, timeFormat } from '../../../util/util'
 
 /* import: modules */
-import { getTPlayer, load, pause, play, setLoaderStatus, stop, unload } from './tmod-player'
+import { getTPlayer, load, pause, play, stop, unload } from './tmod-player'
 
 /* import: types */
 import { PlaylistEntry } from './tmod-types'
@@ -45,38 +48,78 @@ export function initTPlaylist(): void {
 }
 
 /* MIDI adding */
-export async function addFromURL(uri: string): Promise<PlaylistEntry> {
-	setLoaderStatus('fetching')
-
+export async function addFromURL(uri: string): Promise<PlaylistEntry[]> {
 	let url      = new URL(uri)
 	let response = await fetch(url)
-
-	let entry = {
-		filename: url.pathname.split('/').pop(),
-		type    : response.headers.get('Content-Type'),
-		bytes   : await response.bytes()
-	}
-
-	playlist.push(entry)
-	return entry
-}
-export async function addFromFile(): Promise<PlaylistEntry> {
-	setLoaderStatus('waiting_for_file')
-
-	let file = await openFileDialog('.mid,.midi,.zip')
-	if (!file) {
-		setLoaderStatus('idle')
-		return
-	}
 	
-	let entry = {
-		filename: file.name,
-		type    : file.type,
-		bytes   : file.bytes
+	let type     = response.headers.get('Content-Type')
+	let bytes    = await response.bytes()
+
+	let entries: PlaylistEntry[] = []
+
+	if (type === 'application/zip' || type === 'application/x-zip-compressed') {
+		let files: fflate.Unzipped = await new Promise((resolve, reject) => {
+			fflate.unzip(bytes, (err, files) => {
+				if (err) reject(err)
+				else resolve(files)
+			})
+		})
+		for (let filename in files) {
+			let entry: PlaylistEntry = {
+				filename,
+				bytes   : files[filename]
+			}
+
+			entries.push(entry)
+		}
+	} else {
+		let entry = {
+			filename: url.pathname.split('/').pop(),
+			bytes
+		}
+
+		entries.push(entry)
 	}
 
-	playlist.push(entry)
-	return entry
+	playlist.push(...entries)
+	return entries
+}
+export async function addFromFile(): Promise<PlaylistEntry[]> {
+	let files = await openFileDialog('.mid,.midi,.zip')
+
+	if (!files || files.length <= 0)
+		return
+
+	let entries: PlaylistEntry[] = []
+	for (let file of files) {
+		if (file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+			let files: fflate.Unzipped = await new Promise((resolve, reject) => {
+				fflate.unzip(file.bytes, (err, files) => {
+					if (err) reject(err)
+					else resolve(files)
+				})
+			})
+			
+			for (let filename in files) {
+				let entry: PlaylistEntry = {
+					filename,
+					bytes   : files[filename]
+				}
+
+				entries.push(entry)
+			}
+		} else {
+			let entry: PlaylistEntry = {
+				filename: file.name,
+				bytes   : file.bytes
+			}
+
+			entries.push(entry)
+		}
+	}
+
+	playlist.push(...entries)
+	return entries
 }
 
 /* MIDI removing */

@@ -353,29 +353,34 @@ const url_regex = new RegExp(
 	'ig'
 )
 
-export function openFileDialog(accept = '*/*'): Promise<{ name: string; type: string; size: number; bytes: Uint8Array }> {
+export function openFileDialog(accept = '*/*'): Promise<{ name: string; type: string; size: number; bytes: Uint8Array }[]> {
 	return new Promise((resolve, reject) => {
 		const input = document.createElement('input')
 		input.type = 'file'
 		input.accept = accept
+		input.multiple = true
 
 		input.onchange = async () => {
-			const file = input.files?.[0]
+			let files = input.files
 
-			if (!file) {
+			if (!files) {
 				resolve(null)
 				return
 			}
 
 			try {
-				const bytes = new Uint8Array(await file.bytes())
+				let result = []
+				for (let file of files) {
+					let bytes = new Uint8Array(await file.bytes())
 
-				resolve({
-					name: file.name,
-					type: file.type,
-					size: file.size,
-					bytes
-				})
+					result.push({
+						name: file.name,
+						type: file.type,
+						size: file.size,
+						bytes
+					})
+				}
+				resolve(result)
 			} catch (error) {
 				reject(error)
 			}

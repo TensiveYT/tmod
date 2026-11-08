@@ -108,19 +108,19 @@ export const commands: Record<string, Command[]> = {
 									sendChat(COMMAND_ERROR_TAG + `No URL was specified.`)
 									return 1
 								}
-								let entry = await addFromURL(args[2])
+								let entries = await addFromURL(args[2])
 								
-								sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
+								sendChat(COMMAND_SUCCESS_TAG + `Added files: ${entries.map(entry => `\`${entry.filename}\``).join(', ')}.`)
 								break
 							}
 							case 'f':
 							case 'file':
 							case 'file_dialog': {
 								sendChat(COMMAND_INFO_TAG + 'A file dialog should now open.')
-								let entry = await addFromFile()
+								let entries = await addFromFile()
 								
-								if (entry) {
-									sendChat(COMMAND_SUCCESS_TAG + `Added file \`${entry.filename}\`.`)
+								if (entries && entries.length > 0) {
+									sendChat(COMMAND_SUCCESS_TAG + `Added files: ${entries.map(entry => `\`${entry.filename}\``).join(', ')}.`)
 								} else 
 									sendChat(COMMAND_INFO_TAG + `No file was chosen.`)
 								break
@@ -142,7 +142,7 @@ export const commands: Record<string, Command[]> = {
 						let song = getSong(name)
 
 						if (!name) {
-							sendChat(COMMAND_ERROR_TAG + `Please specify a song to remove. Use \`!playlist view\` to see available songs.`)
+							sendChat(COMMAND_ERROR_TAG + `You need to specify a song to remove. Use \`!playlist view\` to see available songs.`)
 							return 1
 						}
 
@@ -278,7 +278,7 @@ export const commands: Record<string, Command[]> = {
 						let song = getSong(name)
 
 						if (!name) {
-							sendChat(COMMAND_ERROR_TAG + `Please specify a song to play. Use \`!playlist view\` to see available songs.`)
+							sendChat(COMMAND_ERROR_TAG + `You need to specify a song to play. Use \`!playlist view\` to see available songs.`)
 							return 1
 						}
 
